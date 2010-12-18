@@ -19,8 +19,19 @@ static const char * TAG = "AndroSS";
  * this program's behavior is determined by the value of the envvar
  * ANDROSS_FRAMEBUFFER_BYTES.
  *      If this is not defined (or an empty string), this binary will query the
- *      framebuffer for horizontal resolution, vertical resolution, and pixel
- *      depth, and write those values in that order, separated by spaces.
+ *      framebuffer for the following information, printing it in decimal in
+ *      this order, separated by spaces:
+ *      horizontal resolution
+ *      vertical resolution
+ *      pixel depth
+ *      red offset (for extracting each color from each pixel)
+ *      red length
+ *      green offset
+ *      green length
+ *      blue offset
+ *      blue length
+ *      alpha offset
+ *      alpha length
  *
  *      If this has a value, this binary will interpret it as the number of
  *      bytes it should read from the framebuffer and write out.
@@ -37,10 +48,18 @@ int writeFBParams(int output_fd, int fb_fd)
     }
 
     char output_data[PARAM_BUFFER_SIZE] = {0};
-    sprintf(output_data, "%d %d %d",
+    sprintf(output_data, "%u %u %u %u %u %u %u %u %u %u %u",
             fb_varinfo.xres,
             fb_varinfo.yres,
-            fb_varinfo.bits_per_pixel);
+            fb_varinfo.bits_per_pixel,
+            fb_varinfo.blue.offset,
+            fb_varinfo.blue.length,
+            fb_varinfo.green.offset,
+            fb_varinfo.green.length,
+            fb_varinfo.red.offset,
+            fb_varinfo.red.length,
+            fb_varinfo.transp.offset,
+            fb_varinfo.transp.length);
 
     write(output_fd, output_data, PARAM_BUFFER_SIZE * sizeof(char));
     return(0);
@@ -69,7 +88,11 @@ int writeFBData(int output_fd, int fb_fd, int fb_bytes)
 int main(int argc, const char * argv[])
 {
     // Find and open the correct framebuffer device.
+#ifdef ANDROID
     int fb_fd = open("/dev/graphics/fb0", O_RDONLY);
+#else
+    int fb_fd = open("/dev/fb0", O_RDONLY);
+#endif
     if (fb_fd < 0) {
         LogE("External: Could not open framebuffer device. Permissions problem?");
         return(1);
