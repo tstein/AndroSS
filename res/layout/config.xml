@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+
+
+
+<ListView android:id="@+id/ListView01" android:layout_width="wrap_content" android:layout_height="wrap_content"></ListView>
+<CheckBox android:layout_width="wrap_content" android:id="@+id/ServiceStatusCheckBox" android:text="@string/ServiceStatusCheckBox_text" android:layout_height="wrap_content"></CheckBox>
+<CheckBox android:layout_width="wrap_content" android:id="@+id/PersistenceCheckBox" android:text="@string/PersistenceCheckBox_text" android:layout_height="wrap_content"></CheckBox>
+<TextView android:text="@string/triggers_text" android:id="@+id/Triggers" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
+<CheckBox android:text="@string/camera_button_trigger_text" android:id="@+id/CameraButtonCheckBox" android:layout_width="wrap_content" android:layout_height="wrap_content"></CheckBox>
+</LinearLayout>

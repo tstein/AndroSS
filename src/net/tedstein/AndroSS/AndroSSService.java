@@ -1,6 +1,5 @@
 package net.tedstein.AndroSS;
 
-import java.io.File;
 import java.io.FileOutputStream;
 
 import android.app.Service;
@@ -17,28 +16,84 @@ public class AndroSSService extends Service {
 	}
 
 	private static final String TAG = "AndroSS";
+	// Phone graphical parameters.
 	public static int screen_width;
 	public static int screen_height;
 	public static int screen_depth;
 	public static int[] c_offsets;
 	public static int[] c_sizes;
 	public static String files_dir;
+	// Service state.
 	private static boolean initialized = false;
+	private static boolean enabled = false;
+	private static boolean persistent = false;
 
 	private static native String getFBInfo(String bin_location);
 	private static native byte[] getFBPixels(String bin_location, int bytes);
 
+	
+	
+	// Getters and setters.
+	public static boolean isEnabled() {
+		return enabled;
+	}
+	public static void enable() {
+		AndroSSService.enabled = true;
+	}
+	public static void disable() {
+		AndroSSService.enabled = false;
+	}
+	
+	public static boolean isPersistent() {
+		return persistent;
+	}	
+	public static void setPersistent() {
+		persistent = true;
+	}
+	public static void unsetPersistent() {
+		persistent = false;
+	}
+	
+	
+	
+	// Inherited methods.
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
 	}
 
 	public void onCreate() {
-		Toast.makeText(this, "Taking screenshot!", Toast.LENGTH_SHORT).show();
-		takeScreenShot();
+		start();
+		Toast.makeText(this, "AndroSS service started.", Toast.LENGTH_SHORT).show();
+		return;
+	}
+		
+	public void onDestroy() {
+		destroy();
+		Toast.makeText(this, "AndroSS service stopped.", Toast.LENGTH_SHORT).show();
 	}
 
+
+
+	// State control functions.
+	public void start() {
+		if (!AndroSSService.initialized) {
+			init();
+		}
+		AndroSSService.enabled = true;
+		Log.d(TAG, "Service: Started.");
+	}
+	
+	public void destroy() {
+		AndroSSService.enabled = false;
+		Log.d(TAG, "Service: Destroyed.");
+	}
+	
+	
 	public void init() {
+		// TODO: Some kind of locking would be more correct, though I'm not sure
+		// I see anything that can go wrong other than some wasted cycles.
+		
 		// Create the AndroSS external binary.
 		// TODO: This would be a great time to chmod +x it, but will that stick?
 		try {
@@ -72,6 +127,7 @@ public class AndroSSService extends Service {
 
 
 
+	// Actual screen-shooting functionality.
 	/**
 	 * @param in - The value of the input pixel.
 	 * @param offsets - An array of four bytes representing the offset of each
@@ -115,14 +171,7 @@ public class AndroSSService extends Service {
 	}
 
 
-	public void takeScreenShot() {
-		// TODO: Some kind of locking would be more correct, though I'm not sure
-		// I see anything that can go wrong other than some wasted cycles.
-		if (!AndroSSService.initialized) {
-			Log.d(TAG, "Service: Initializing.");
-			init();
-		}
-
+	public static void takeScreenShot() {
 		long start_time = System.currentTimeMillis();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
 		int bytes = screen_width * screen_height * (screen_depth / 8);

@@ -4,7 +4,7 @@
       android:versionCode="1"
       android:versionName="1.0">
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
-        <activity android:label="@string/app_name" android:name="net.tedstein.AndroSS.AndroSSActivity">
+        <activity android:label="@string/app_name" android:name="ConfigurationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -12,6 +12,12 @@
         </activity>
 
     <service android:name="AndroSSService"></service>
+    
+    <receiver android:name="CameraButtonReceiver"> 
+    <intent-filter android:priority="9999"> 
+        <action android:name="android.intent.action.CAMERA_BUTTON"/> 
+    </intent-filter> 
+</receiver> 
 </application>
 
 
