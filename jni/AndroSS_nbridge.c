@@ -8,7 +8,6 @@
 #define MAX_INFO_BYTES 128
 #define MAX_CMD_LEN 256
 #define MAX_BYTES_DIGITS 16
-#define CHUNK_SIZE 1024
 
 
 static const char * TAG = "AndroSS";
@@ -37,6 +36,7 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 	// Tell the external binary we just want info about the framebuffer.
 	unsetenv(envvar);
 
+	LogD("NBridge: Executing %s", cmd);
 	FILE * from_extbin = popen(cmd, "r");
 	int bytes_read = fread(strbuf, MAX_INFO_BYTES, 1, from_extbin);
 	if (ferror(from_extbin)) {
@@ -51,7 +51,6 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 jbyteArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 		JNIEnv * env, jobject this,
 		jstring bin_location, jint bytes) {
-	char strbuf[MAX_INFO_BYTES] = {0};
 	char cmd[MAX_CMD_LEN] = {0};
 	const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
 	strncpy(cmd, "su -c    ", 9);
@@ -66,23 +65,21 @@ jbyteArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 	// Tell the external binary how many bytes to read from the framebuffer.
 	setenv(envvar, bytes_str, 1);
 
-	// And then get the data in 1 kiB chunks.
-	// TODO: Pick a non-arbitrary number for this.
+	// And then slurp the data.
+	LogD("NBridge: Executing %s", cmd);
 	FILE * from_extbin = popen(cmd, "r");
-	int chunks = (bytes / CHUNK_SIZE) +
-			(bytes % CHUNK_SIZE ? 1 : 0);
-	int chunks_read = fread(pixbuf, CHUNK_SIZE, chunks, from_extbin);
+	int chunks_read = fread(pixbuf, bytes, 1, from_extbin);
 	if (ferror(from_extbin) && !(feof(from_extbin))) {
 		LogE("NBridge: Error reading framebuffer data from subprocess!");
 		return 0;
 	}
-    LogD("NBridge: Read %u chunks from subprocess (expected %u).", chunks_read, chunks);
 
 	// Finally, cast pixbuf as an jbyte[] and convert it to a jbyteArray we can
 	// return to Java.
 	jbyteArray ret = (*env)->NewByteArray(env, bytes);
 	(*env)->SetByteArrayRegion(env, ret, 0, bytes, (jbyte *)pixbuf);
 	free(pixbuf);
+	LogD("NBridge: Returning data.");
 	return ret;
 }
 
