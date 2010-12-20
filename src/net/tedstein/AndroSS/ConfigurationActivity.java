@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
 public class ConfigurationActivity extends Activity {
@@ -21,14 +20,14 @@ public class ConfigurationActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.config);
-		
+
 		final Context c = this;
-		
+
 		CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
 		CheckBox persistent = (CheckBox)findViewById(R.id.PersistenceCheckBox);
 		CheckBox useCamera = (CheckBox)findViewById(R.id.CameraButtonCheckBox);
-		
-		
+		CheckBox useShake = (CheckBox)findViewById(R.id.ShakeCheckBox);
+
 		enabled.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView,
 					boolean isChecked) {
@@ -40,7 +39,7 @@ public class ConfigurationActivity extends Activity {
 				}
 			}
 		});
-		
+
 		persistent.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if (isChecked) {
@@ -50,7 +49,7 @@ public class ConfigurationActivity extends Activity {
 				}
 			}
 		});
-		
+
 		useCamera.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if (isChecked) {
@@ -60,18 +59,30 @@ public class ConfigurationActivity extends Activity {
 				}
 			}
 		});
+
+		useShake.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if (isChecked) {
+					AndroSSService.setShake();
+				} else {
+					AndroSSService.unsetShake();
+				}
+			}
+		});
 	}
-	
+
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
+
 		CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
 		CheckBox persistent = (CheckBox)findViewById(R.id.PersistenceCheckBox);
 		CheckBox useCamera = (CheckBox)findViewById(R.id.CameraButtonCheckBox);
-		
+		CheckBox useShake = (CheckBox)findViewById(R.id.ShakeCheckBox);
+
 		enabled.setChecked(AndroSSService.isEnabled());
 		persistent.setChecked(AndroSSService.isPersistent());
 		useCamera.setChecked(CameraButtonReceiver.isEnabled());
+		useShake.setChecked(AndroSSService.isShakeEnabled());
 	}
 }

@@ -5,17 +5,23 @@ import java.io.FileOutputStream;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
-public class AndroSSService extends Service {
+public class AndroSSService extends Service implements SensorEventListener {
 	static {
 		System.loadLibrary("AndroSS_nbridge");
 	}
 
 	private static final String TAG = "AndroSS";
+	private static final float ACCEL_THRESH = 7.0F;
+	private static SensorManager sm;
 	// Phone graphical parameters.
 	public static int screen_width;
 	public static int screen_height;
@@ -27,12 +33,19 @@ public class AndroSSService extends Service {
 	private static boolean initialized = false;
 	private static boolean enabled = false;
 	private static boolean persistent = false;
+	private static boolean shakeTrigger = false;
+	private static float old_x = 0;
+	private static float old_y = 0;
+	private static float old_z = 0;
 
+
+
+	// Native function signatures.
 	private static native String getFBInfo(String bin_location);
 	private static native byte[] getFBPixels(String bin_location, int bytes);
 
-	
-	
+
+
 	// Getters and setters.
 	public static boolean isEnabled() {
 		return enabled;
@@ -43,7 +56,7 @@ public class AndroSSService extends Service {
 	public static void disable() {
 		AndroSSService.enabled = false;
 	}
-	
+
 	public static boolean isPersistent() {
 		return persistent;
 	}	
@@ -53,9 +66,22 @@ public class AndroSSService extends Service {
 	public static void unsetPersistent() {
 		persistent = false;
 	}
-	
-	
-	
+
+	public static boolean isShakeEnabled() {
+		return shakeTrigger;
+	}
+	public static void setShake() {
+		shakeTrigger = true;
+	}
+	public static void unsetShake() {
+		old_x = 0;
+		old_y = 0;
+		old_z = 0;
+		shakeTrigger = false;
+	}
+
+
+
 	// Inherited methods.
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -67,7 +93,7 @@ public class AndroSSService extends Service {
 		Toast.makeText(this, "AndroSS service started.", Toast.LENGTH_SHORT).show();
 		return;
 	}
-		
+
 	public void onDestroy() {
 		destroy();
 		Toast.makeText(this, "AndroSS service stopped.", Toast.LENGTH_SHORT).show();
@@ -83,17 +109,16 @@ public class AndroSSService extends Service {
 		AndroSSService.enabled = true;
 		Log.d(TAG, "Service: Started.");
 	}
-	
+
 	public void destroy() {
 		AndroSSService.enabled = false;
 		Log.d(TAG, "Service: Destroyed.");
 	}
-	
-	
+
 	public void init() {
 		// TODO: Some kind of locking would be more correct, though I'm not sure
 		// I see anything that can go wrong other than some wasted cycles.
-		
+
 		// Create the AndroSS external binary.
 		// TODO: This would be a great time to chmod +x it, but will that stick?
 		try {
@@ -120,6 +145,11 @@ public class AndroSSService extends Service {
 			AndroSSService.c_offsets[color] = Integer.parseInt(params[3 + (color * 2)]);
 			AndroSSService.c_sizes[color] = Integer.parseInt(params[4 + (color * 2)]);
 		}
+
+		AndroSSService.sm = (SensorManager)getSystemService(SENSOR_SERVICE);
+		sm.registerListener(this,
+				sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+				SensorManager.SENSOR_DELAY_GAME);
 
 		AndroSSService.initialized = true;
 		Log.d(TAG, "Service: Initialized.");
@@ -171,7 +201,7 @@ public class AndroSSService extends Service {
 	}
 
 
-	public static void takeScreenShot() {
+	public static void takeScreenshot() {
 		long start_time = System.currentTimeMillis();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
 		int bytes = screen_width * screen_height * (screen_depth / 8);
@@ -226,5 +256,56 @@ public class AndroSSService extends Service {
 				"ms (latency: " +
 				String.valueOf(pixel_time - start_time) +
 		"ms).");
+	}
+
+
+
+	// Triggering functions.
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// whatever
+		return;
+	}
+	public void onSensorChanged(SensorEvent event) {
+		if (AndroSSService.enabled && AndroSSService.shakeTrigger) {
+			boolean first = false;
+			if (old_x == 0 && old_y == 0 && old_z == 0) {
+				first = true;
+			}
+
+			float x = event.values[0];
+			float y = event.values[1];
+			float z = event.values[2];
+
+			float x_diff = x - old_x;
+			float y_diff = y - old_y;
+			float z_diff = z - old_z;
+
+			old_x = x;
+			old_y = y;
+			old_z = z;
+
+			if (!first) {
+				double magnitude = Math.sqrt(
+						(x_diff * x_diff) +
+						(y_diff * y_diff) +
+						(z_diff * z_diff));
+				if (magnitude > AndroSSService.ACCEL_THRESH) {
+					Log.d(TAG, String.format(
+							"Service: Triggering on shake of magnitude %f.",
+							magnitude));
+
+					// We'll probably get a lot of shake events from a single
+					// physical motion, so disable this trigger during the
+					// screenshot.
+					AndroSSService.unsetShake();
+					AndroSSService.takeScreenshot();
+					AndroSSService.setShake();
+
+					if (!AndroSSService.isPersistent()) {
+						AndroSSService.disable();
+					}
+				}
+			}
+		}
 	}
 }

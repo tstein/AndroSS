@@ -6,4 +6,5 @@
 <string name="triggers_text">Trigger on...</string>
 <string name="camera_button_trigger_text">hardware camera button?</string>
 <string name="PersistenceCheckBox_text">Persistent?</string>
+<string name="shake_trigger_text">shake?</string>
 </resources>
