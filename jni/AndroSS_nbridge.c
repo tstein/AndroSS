@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include <android.h>
-#define MAX_INFO_BYTES 32
+#define MAX_INFO_BYTES 128
 #define MAX_CMD_LEN 256
 #define MAX_BYTES_DIGITS 16
 #define CHUNK_SIZE 1024
