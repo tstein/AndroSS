@@ -3,6 +3,7 @@ package net.tedstein.AndroSS;
 import java.io.FileOutputStream;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
@@ -201,7 +202,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 	}
 
 
-	public static void takeScreenshot() {
+	public static void takeScreenshot(Context c) {
 		long start_time = System.currentTimeMillis();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
 		int bytes = screen_width * screen_height * (screen_depth / 8);
@@ -256,6 +257,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 				"ms (latency: " +
 				String.valueOf(pixel_time - start_time) +
 		"ms).");
+		Toast.makeText(c, "Took screenshot.", Toast.LENGTH_SHORT).show();
 	}
 
 
@@ -298,7 +300,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 					// physical motion, so disable this trigger during the
 					// screenshot.
 					AndroSSService.unsetShake();
-					AndroSSService.takeScreenshot();
+					AndroSSService.takeScreenshot(this);
 					AndroSSService.setShake();
 
 					if (!AndroSSService.isPersistent()) {

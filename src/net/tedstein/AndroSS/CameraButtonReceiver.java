@@ -30,7 +30,7 @@ public class CameraButtonReceiver extends BroadcastReceiver {
 				Intent i = new Intent(context, AndroSSService.class);
 				context.stopService(i);
 			}
-			AndroSSService.takeScreenshot();
+			AndroSSService.takeScreenshot(context);
 
 			// This will prevent the real camera app from launching.
 			abortBroadcast();
