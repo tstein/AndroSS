@@ -31,11 +31,19 @@ public class ConfigurationActivity extends Activity {
 		enabled.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView,
 					boolean isChecked) {
+				// This gets called on resumes and rotations, so we should make
+				// sure we actually want to mess with the service before doing
+				// so.
+				boolean was_enabled = AndroSSService.isEnabled();
 				Intent i = new Intent(c, AndroSSService.class);
 				if (isChecked) {
-					startService(i);
+					if (!was_enabled) {
+						startService(i);
+					}
 				} else {
-					stopService(i);
+					if (was_enabled) {
+						stopService(i);
+					}
 				}
 			}
 		});

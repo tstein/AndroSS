@@ -21,15 +21,16 @@ public class CameraButtonReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		if (CameraButtonReceiver.isEnabled() && AndroSSService.isEnabled()) {
 			Log.d(TAG, "CameraButtonReceiver: Handling broadcast.");
+			Intent i = new Intent(context, AndroSSService.class);
+			i.putExtra("TAKE_SCREENSHOT", true);
+			context.startService(i);
 			if (!AndroSSService.isPersistent()) {
-				Intent i = new Intent(context, AndroSSService.class);
 				context.stopService(i);
 			}
-			AndroSSService.takeScreenshot(context);
 
 			// This will prevent the real camera app from launching.
 			abortBroadcast();
 			Toast.makeText(context, "Took screenshot.", Toast.LENGTH_SHORT).show();
-		}		
+		}
 	}
 }

@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.util.Calendar;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
@@ -88,10 +87,20 @@ public class AndroSSService extends Service implements SensorEventListener {
 		return null;
 	}
 
-	public void onCreate() {
-		start();
+	public int onStartCommand(Intent intent, int flags, int startId) {
 		Toast.makeText(this, "AndroSS service started.", Toast.LENGTH_SHORT).show();
-		return;
+		if (intent.getBooleanExtra("TAKE_SCREENSHOT", false)) {
+			takeScreenshot();
+		}
+		return 0;
+	}
+
+	public void onCreate() {
+		if (!AndroSSService.initialized) {
+			init();
+		}
+		AndroSSService.enabled = true;
+		Log.d(TAG, "Service: Created.");
 	}
 
 	public void onDestroy() {
@@ -102,17 +111,11 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
 	// State control functions.
-	public void start() {
-		if (!AndroSSService.initialized) {
-			init();
-		}
-		AndroSSService.enabled = true;
-		Log.d(TAG, "Service: Started.");
-	}
-
 	public void destroy() {
-		AndroSSService.enabled = false;
-		Log.d(TAG, "Service: Destroyed.");
+		if (AndroSSService.enabled) {
+			AndroSSService.enabled = false;
+			Log.d(TAG, "Service: Destroyed.");
+		}
 	}
 
 	public void init() {
@@ -158,10 +161,10 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
 	// Actual screen-shooting functionality.
-	private static String calToStr(Calendar c) {
+	private String calToStr(Calendar c) {
 		String ret = "";
 		ret += c.get(Calendar.YEAR) + "-";
-		ret += c.get(Calendar.MONTH) + "-";
+		ret += (c.get(Calendar.MONTH) + 1) + "-";
 		ret += c.get(Calendar.DAY_OF_MONTH) + "_";
 		ret += String.format("%02d.", c.get(Calendar.HOUR_OF_DAY));
 		ret += String.format("%02d.", c.get(Calendar.MINUTE));
@@ -169,7 +172,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 		return ret;
 	}
 
-	private static boolean writeScreenshot(Bitmap bmp, String filename) {
+	private boolean writeScreenshot(Bitmap bmp, String filename) {
 		boolean success = false;
 
 		File output = new File(AndroSSService.output_dir + filename);
@@ -233,7 +236,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 	}
 
 
-	public static void takeScreenshot(Context c) {
+	public void takeScreenshot() {
 		Calendar start_time = Calendar.getInstance();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
 		int bytes = screen_width * screen_height * (screen_depth / 8);
@@ -282,7 +285,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 				"ms (latency: " +
 				String.valueOf(pixel_time - start_time.getTimeInMillis()) +
 		"ms).");
-		Toast.makeText(c, "Took screenshot.", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
 	}
 
 
@@ -325,12 +328,16 @@ public class AndroSSService extends Service implements SensorEventListener {
 					// physical motion, so disable this trigger during the
 					// screenshot.
 					AndroSSService.setShake(false);
-					AndroSSService.takeScreenshot(this);
-					AndroSSService.setShake(true);
-
+					takeScreenshot();
 					if (!AndroSSService.isPersistent()) {
-						AndroSSService.setEnabled(false);
+						// Because of how quickly the SensorEvents come in,
+						// stopSelf() probably won't actually result in
+						// onDestroy() getting called until after the entire
+						// event queue has settled.
+						destroy();
+						stopSelf();
 					}
+					AndroSSService.setShake(true);
 				}
 			}
 		}
