@@ -51,34 +51,29 @@ public class AndroSSService extends Service implements SensorEventListener {
 	public static boolean isEnabled() {
 		return enabled;
 	}
-	public static void enable() {
-		AndroSSService.enabled = true;
-	}
-	public static void disable() {
-		AndroSSService.enabled = false;
+	public static void setEnabled(boolean enable) {
+		AndroSSService.enabled = enable;
 	}
 
 	public static boolean isPersistent() {
 		return persistent;
 	}	
-	public static void setPersistent() {
-		persistent = true;
-	}
-	public static void unsetPersistent() {
-		persistent = false;
+	public static void setPersistent(boolean enable) {
+		persistent = enable;
 	}
 
 	public static boolean isShakeEnabled() {
 		return shakeTrigger;
 	}
-	public static void setShake() {
-		shakeTrigger = true;
-	}
-	public static void unsetShake() {
-		old_x = 0;
-		old_y = 0;
-		old_z = 0;
-		shakeTrigger = false;
+	public static void setShake(boolean enable) {
+		if (enable) {
+			shakeTrigger = true;
+		} else {
+			old_x = 0;
+			old_y = 0;
+			old_z = 0;
+			shakeTrigger = false;
+		}
 	}
 
 
@@ -299,12 +294,12 @@ public class AndroSSService extends Service implements SensorEventListener {
 					// We'll probably get a lot of shake events from a single
 					// physical motion, so disable this trigger during the
 					// screenshot.
-					AndroSSService.unsetShake();
+					AndroSSService.setShake(false);
 					AndroSSService.takeScreenshot(this);
-					AndroSSService.setShake();
+					AndroSSService.setShake(true);
 
 					if (!AndroSSService.isPersistent()) {
-						AndroSSService.disable();
+						AndroSSService.setEnabled(false);
 					}
 				}
 			}

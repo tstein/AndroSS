@@ -42,31 +42,19 @@ public class ConfigurationActivity extends Activity {
 
 		persistent.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (isChecked) {
-					AndroSSService.setPersistent();
-				} else {
-					AndroSSService.unsetPersistent();
-				}
+				AndroSSService.setPersistent(isChecked);
 			}
 		});
 
 		useCamera.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (isChecked) {
-					CameraButtonReceiver.enable();
-				} else {
-					CameraButtonReceiver.disable();
-				}
+				CameraButtonReceiver.setEnabled(isChecked);
 			}
 		});
 
 		useShake.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (isChecked) {
-					AndroSSService.setShake();
-				} else {
-					AndroSSService.unsetShake();
-				}
+				AndroSSService.setShake(isChecked);
 			}
 		});
 	}

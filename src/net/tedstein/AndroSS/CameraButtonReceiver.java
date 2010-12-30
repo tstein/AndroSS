@@ -13,13 +13,8 @@ public class CameraButtonReceiver extends BroadcastReceiver {
 	public static boolean isEnabled() {
 		return enabled;
 	}
-
-	public static void enable() {
-		enabled = true;
-	}
-
-	public static void disable() {
-		enabled = false;
+	public static void setEnabled(boolean isChecked) {
+		enabled = isChecked;
 	}
 
 	@Override
