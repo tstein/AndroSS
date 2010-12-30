@@ -1,6 +1,8 @@
 package net.tedstein.AndroSS;
 
+import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Calendar;
 
 import android.app.Service;
 import android.content.Context;
@@ -23,13 +25,15 @@ public class AndroSSService extends Service implements SensorEventListener {
 	private static final String TAG = "AndroSS";
 	private static final float ACCEL_THRESH = 7.0F;
 	private static SensorManager sm;
-	// Phone graphical parameters.
+	// Phone graphical parameters and fixed config.
 	public static int screen_width;
 	public static int screen_height;
 	public static int screen_depth;
 	public static int[] c_offsets;
 	public static int[] c_sizes;
 	public static String files_dir;
+	// Configuration.
+	public static String output_dir = "/sdcard/screenshots/";
 	// Service state.
 	private static boolean initialized = false;
 	private static boolean enabled = false;
@@ -154,6 +158,38 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
 	// Actual screen-shooting functionality.
+	private static String calToStr(Calendar c) {
+		String ret = "";
+		ret += c.get(Calendar.YEAR) + "-";
+		ret += c.get(Calendar.MONTH) + "-";
+		ret += c.get(Calendar.DAY_OF_MONTH) + "_";
+		ret += String.format("%02d.", c.get(Calendar.HOUR_OF_DAY));
+		ret += String.format("%02d.", c.get(Calendar.MINUTE));
+		ret += String.format("%02d", c.get(Calendar.SECOND));
+		return ret;
+	}
+
+	private static boolean writeScreenshot(Bitmap bmp, String filename) {
+		boolean success = false;
+
+		File output = new File(AndroSSService.output_dir + filename);
+		try {
+			// A little wasteful, maybe, but this avoids errors due to the
+			// output dir not existing.
+			output.getParentFile().mkdirs();
+			FileOutputStream os = new FileOutputStream(output);
+			success = bmp.compress(Bitmap.CompressFormat.PNG, 0, os);
+			os.flush();
+			os.close();
+		} catch (Exception e) {
+			Log.e(TAG, "Service: Oh god what");
+			Log.e(TAG, e.getMessage());
+		}
+
+		return success;
+	}
+
+
 	/**
 	 * @param in - The value of the input pixel.
 	 * @param offsets - An array of four bytes representing the offset of each
@@ -198,9 +234,11 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
 	public static void takeScreenshot(Context c) {
-		long start_time = System.currentTimeMillis();
+		Calendar start_time = Calendar.getInstance();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
 		int bytes = screen_width * screen_height * (screen_depth / 8);
+
+		// First order of business is to get the pixels.
 		byte[] pixels_bytes = getFBPixels(AndroSSService.files_dir, bytes);
 		long pixel_time = System.currentTimeMillis();
 
@@ -232,25 +270,17 @@ public class AndroSSService extends Service implements SensorEventListener {
 		bmp_ss.setPixels(pixels, 0, screen_width,
 				0, 0, screen_width, screen_height);
 
-		String filename = "/sdcard/ss.png";
-		boolean success = false;
-		try {
-			FileOutputStream os = new FileOutputStream(filename);
-			success = bmp_ss.compress(Bitmap.CompressFormat.PNG, 0, os);
-			os.flush();
-			os.close();
-		} catch (Exception e) {
-			Log.e(TAG, "Service: Oh god what");
-			e.printStackTrace();
-		} finally {
-			Log.d(TAG, "Service: Writing to " + filename + ": " + (success ? "success" : "failure"));
-		}
+		// Build an intelligent filename, write out to file, and register with
+		// the Android media services.
+		String filename = calToStr(start_time) + ".png";
+		boolean success = writeScreenshot(bmp_ss, filename);
 
+		Log.d(TAG, "Service: Writing to " + filename + ": " + (success ? "success" : "failure"));
 		long finish_time = System.currentTimeMillis();
 		Log.d(TAG, "Service: Screenshot taken in " +
-				String.valueOf(finish_time - start_time) +
+				String.valueOf(finish_time - start_time.getTimeInMillis()) +
 				"ms (latency: " +
-				String.valueOf(pixel_time - start_time) +
+				String.valueOf(pixel_time - start_time.getTimeInMillis()) +
 		"ms).");
 		Toast.makeText(c, "Took screenshot.", Toast.LENGTH_SHORT).show();
 	}
