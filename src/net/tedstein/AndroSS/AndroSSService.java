@@ -163,9 +163,9 @@ public class AndroSSService extends Service implements SensorEventListener {
 	// Actual screen-shooting functionality.
 	private String calToStr(Calendar c) {
 		String ret = "";
-		ret += c.get(Calendar.YEAR) + "-";
-		ret += (c.get(Calendar.MONTH) + 1) + "-";
-		ret += c.get(Calendar.DAY_OF_MONTH) + "_";
+		ret += String.format("%04d-", c.get(Calendar.YEAR));
+		ret += String.format("%02d-", (c.get(Calendar.MONTH) + 1));
+		ret += String.format("%02d_", c.get(Calendar.DAY_OF_MONTH));
 		ret += String.format("%02d.", c.get(Calendar.HOUR_OF_DAY));
 		ret += String.format("%02d.", c.get(Calendar.MINUTE));
 		ret += String.format("%02d", c.get(Calendar.SECOND));
