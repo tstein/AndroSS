@@ -1,0 +1,30 @@
+Short version:
+Always run `make` in jni/ after modifying the native code or changing the
+"debuggable" attribute in the manifest unless you enjoy segfaults.
+
+
+
+Long version:
+AndroSS uses two pieces of native code to accomplish its task. The first,
+located in jni/AndroSS_nbridge.c, is unremarkable jni code and can be built with
+the ndk without any special steps. The second is jni/AndroSS.c, which compiles
+to a binary and must be run with system("su -c AndroSS"); from within the
+_nbridge code. There aren't a lot use cases intended by the Android devs that
+involve having non-{image,xml} resources, so it's difficult-to-impossible to get
+the standard build system to include a binary for you to use like that.
+Therefore, I created the following ugly hack:
+
+1. Compile AndroSS normally with ndk-build.
+2. base64 encode the result and auto-generate a Java class whose only member is
+a String with that value.
+3. base64 decode that string at runtime and dump the result to a private file.
+
+After a quick chmod +x, we're ready to start shooting some screens. There's a
+code size penalty (+60% on a few kilobytes), but the real downside is that we
+have a Java source file that must be generated entirely outside of the rest of
+the build system. Note that ndk-build will check whether debuggable is set in
+the project Manifest and conditionally include gdb code. It appears that mixing
+debuggable Dalvik/regular ARM or vice-versa is a recipe for software
+catastrophe, so I recommend `make`ing anew every time you mess with either the
+native code or debuggable.
+
