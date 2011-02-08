@@ -12,4 +12,5 @@
 
 <CheckBox android:text="@string/shake_trigger_text" android:id="@+id/ShakeCheckBox" android:layout_width="wrap_content" android:layout_height="wrap_content"></CheckBox>
 <CheckBox android:id="@+id/CameraButtonCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/camera_button_trigger_text"></CheckBox>
+<TextView android:id="@+id/DebugStringText" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="TextView"></TextView>
 </LinearLayout>

@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.TextView;
 
 public class ConfigurationActivity extends Activity {
 	static {
@@ -80,5 +81,8 @@ public class ConfigurationActivity extends Activity {
 		persistent.setChecked(AndroSSService.isPersistent());
 		useCamera.setChecked(CameraButtonReceiver.isEnabled());
 		useShake.setChecked(AndroSSService.isShakeEnabled());
+		TextView debugString = (TextView)findViewById(R.id.DebugStringText);
+
+		debugString.setText(AndroSSService.getParamString());
 	}
 }
