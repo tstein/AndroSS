@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.util.Calendar;
 
 import android.app.Service;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
@@ -12,6 +14,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.provider.MediaStore.Images;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
@@ -50,7 +53,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
 
-	// Getters and setters.
+	// Public static functions.
 	public static boolean isEnabled() {
 		return enabled;
 	}
@@ -76,6 +79,14 @@ public class AndroSSService extends Service implements SensorEventListener {
 			old_y = 0;
 			old_z = 0;
 			shakeTrigger = false;
+		}
+	}
+
+	public static String getParamString() {
+		if (AndroSSService.initialized) {
+			return getFBInfo(AndroSSService.files_dir);
+		} else {
+			return "";
 		}
 	}
 
@@ -133,8 +144,8 @@ public class AndroSSService extends Service implements SensorEventListener {
 		}
 
 		// Get screen info.
-		files_dir = getFilesDir().getAbsolutePath();
-		String param_string = getFBInfo(files_dir);
+		AndroSSService.files_dir = getFilesDir().getAbsolutePath();
+		String param_string = getFBInfo(AndroSSService.files_dir);
 		Log.d(TAG, "Service: Got framebuffer params: " + param_string);
 		String[] params = param_string.split(" ");
 
@@ -172,6 +183,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 		return ret;
 	}
 
+
 	private boolean writeScreenshot(Bitmap bmp, String filename) {
 		boolean success = false;
 
@@ -190,6 +202,22 @@ public class AndroSSService extends Service implements SensorEventListener {
 		}
 
 		return success;
+	}
+
+
+	private void registerNewScreenshot(String filename, long when) {
+		long size = new File(filename).length();
+
+		ContentResolver cr = getContentResolver();
+		ContentValues cv = new ContentValues(5);
+
+		cv.put(Images.Media.DATA, filename);
+		cv.put(Images.Media.SIZE, size);
+		cv.put(Images.Media.MIME_TYPE, "image/png");
+		cv.put(Images.Media.DATE_TAKEN, when);
+		cv.put(Images.Media.ORIENTATION, 0);
+
+		cr.insert(Images.Media.EXTERNAL_CONTENT_URI, cv);
 	}
 
 
@@ -278,14 +306,18 @@ public class AndroSSService extends Service implements SensorEventListener {
 		String filename = calToStr(start_time) + ".png";
 		boolean success = writeScreenshot(bmp_ss, filename);
 
-		Log.d(TAG, "Service: Writing to " + filename + ": " + (success ? "success" : "failure"));
-		long finish_time = System.currentTimeMillis();
-		Log.d(TAG, "Service: Screenshot taken in " +
-				String.valueOf(finish_time - start_time.getTimeInMillis()) +
-				"ms (latency: " +
-				String.valueOf(pixel_time - start_time.getTimeInMillis()) +
-		"ms).");
-		Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
+		Log.d(TAG, "Service: Wrote to " + filename + ": " + (success ? "success" : "failure"));
+		if (success) {
+			long finish_time = System.currentTimeMillis();
+
+			registerNewScreenshot(AndroSSService.output_dir + filename, start_time.getTimeInMillis());
+			Log.d(TAG, "Service: Screenshot taken in " +
+					String.valueOf(finish_time - start_time.getTimeInMillis()) +
+					"ms (latency: " +
+					String.valueOf(pixel_time - start_time.getTimeInMillis()) +
+					"ms).");
+			Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
+		}
 	}
 
 
