@@ -14,6 +14,16 @@ static const char * TAG = "AndroSS";
 static const char * envvar = "ANDROSS_FRAMEBUFFER_BYTES";
 
 
+jint JNI_OnLoad(JavaVM * vm, void * reserved) {
+    JNIEnv * env;
+    if ((*vm)->GetEnv(vm, (void **)&env, JNI_VERSION_1_6) != JNI_OK) {
+        return -1;
+    } else {
+        return JNI_VERSION_1_6;
+    }
+}
+
+
 jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 		JNIEnv * env, jobject this,
 		jstring bin_location) {
@@ -47,6 +57,7 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 	pclose(from_extbin);
 	return ret;
 }
+
 
 jbyteArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 		JNIEnv * env, jobject this,
