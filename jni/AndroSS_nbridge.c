@@ -34,8 +34,8 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 
 	// Bad things will happen if the binary isn't executable, so let's make sure
 	// it is before we try to use it.
-	strncpy(cmd, "chmod +x ", 9);
-	strncat(cmd, data_dir, MAX_CMD_LEN - 9 - 16);
+	strncpy(cmd, "chmod 770 ", 10);
+	strncat(cmd, data_dir, MAX_CMD_LEN - 10 - 16);
 	strncat(cmd, "/AndroSS", 16);
 	LogD("NBridge: Executing %s", cmd);
 	system(cmd);
