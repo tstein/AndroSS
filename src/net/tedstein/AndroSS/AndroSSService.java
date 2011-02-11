@@ -267,7 +267,9 @@ public class AndroSSService extends Service implements SensorEventListener {
 	public void takeScreenshot() {
 		Calendar start_time = Calendar.getInstance();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
-		int bytes = screen_width * screen_height * (screen_depth / 8);
+
+		int bpp = AndroSSService.screen_depth / 8;
+		int bytes = screen_width * screen_height * bpp;
 
 		// First order of business is to get the pixels.
 		byte[] pixels_bytes = getFBPixels(AndroSSService.files_dir, bytes);
@@ -276,12 +278,11 @@ public class AndroSSService extends Service implements SensorEventListener {
 		// android.graphics.Bitmap is expecting an array of ARGB_8888 ints, so
 		// we'll need to do some conversion based on the bit depth. Extract
 		// screen_depth / 8 bytes at a time and pass them off to formatPixel().
-		int[] pixels = new int[bytes / 4];
+		int[] pixels = new int[bytes / bpp];
 		Log.d(TAG, "Service: Converting " + String.valueOf(pixels_bytes.length) +
 		" bytes from the framebuffer.");
 		int tmp_int;
 		byte tmp_byte;
-		int bpp = AndroSSService.screen_depth / 8;
 		for (int i = 0; i < bytes; i += bpp) {
 			tmp_int = 0;
 			for (int j = bpp - 1; j >= 0; --j) {
