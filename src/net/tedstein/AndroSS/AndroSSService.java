@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -26,6 +27,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 	private static final String TAG = "AndroSS";
 	private static final float ACCEL_THRESH = 7.0F;
+	private static final long IGNORE_SHAKE_INTERVAL = 1000 * 1000 * 1000;
 	private static SensorManager sm;
 	// Phone graphical parameters and fixed config.
 	public static int screen_width;
@@ -38,12 +40,12 @@ public class AndroSSService extends Service implements SensorEventListener {
 	public static String output_dir = "/sdcard/screenshots/";
 	// Service state.
 	private static boolean initialized = false;
-	private static boolean enabled = false;
-	private static boolean persistent = false;
-	private static boolean shakeTrigger = false;
+	private static long last_shake_event = 0;
 	private static float old_x = 0;
 	private static float old_y = 0;
 	private static float old_z = 0;
+	private static SharedPreferences sp = null;
+	private static SharedPreferences.Editor spe = null;
 
 
 
@@ -55,31 +57,58 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 	// Public static functions.
 	public static boolean isEnabled() {
-		return enabled;
+		if (!initialized) {
+			return false;
+		} else {
+			return sp.getBoolean(Prefs.ENABLED_KEY, false);
+		}
 	}
 	public static void setEnabled(boolean enable) {
-		AndroSSService.enabled = enable;
+		spe.putBoolean(Prefs.ENABLED_KEY, enable);
+		spe.commit();
 	}
 
 	public static boolean isPersistent() {
-		return persistent;
+		if (!initialized) {
+			return false;
+		} else {
+			return sp.getBoolean(Prefs.PERSISTENT_KEY, false);
+		}
 	}	
 	public static void setPersistent(boolean enable) {
-		persistent = enable;
+		spe.putBoolean(Prefs.PERSISTENT_KEY, enable);
+		spe.commit();
 	}
 
 	public static boolean isShakeEnabled() {
-		return shakeTrigger;
+		if (!initialized) {
+			return false;
+		} else {
+			return sp.getBoolean(Prefs.SHAKE_TRIGGER_KEY, false);
+		}
 	}
 	public static void setShake(boolean enable) {
 		if (enable) {
-			shakeTrigger = true;
+			spe.putBoolean(Prefs.SHAKE_TRIGGER_KEY, true);
 		} else {
 			old_x = 0;
 			old_y = 0;
 			old_z = 0;
-			shakeTrigger = false;
+			spe.putBoolean(Prefs.SHAKE_TRIGGER_KEY, false);
 		}
+		spe.commit();
+	}
+
+	public static boolean isCameraButtonEnabled() {
+		if (!initialized) {
+			return false;
+		} else {
+			return sp.getBoolean(Prefs.CAMERA_TRIGGER_KEY, false);
+		}
+	}
+	public static void setCameraButton(boolean enable) {
+		spe.putBoolean(Prefs.CAMERA_TRIGGER_KEY, enable);
+		spe.commit();
 	}
 
 	public static String getParamString() {
@@ -110,28 +139,31 @@ public class AndroSSService extends Service implements SensorEventListener {
 		if (!AndroSSService.initialized) {
 			init();
 		}
-		AndroSSService.enabled = true;
+
+		sm.registerListener(this,
+				sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+				SensorManager.SENSOR_DELAY_UI);
+		setEnabled(true);
 		Log.d(TAG, "Service: Created.");
 	}
 
 	public void onDestroy() {
-		destroy();
+		setEnabled(false);
+		sm.unregisterListener(this);
+		Log.d(TAG, "Service: Destroyed.");
 		Toast.makeText(this, "AndroSS service stopped.", Toast.LENGTH_SHORT).show();
 	}
 
 
 
 	// State control functions.
-	public void destroy() {
-		if (AndroSSService.enabled) {
-			AndroSSService.enabled = false;
-			Log.d(TAG, "Service: Destroyed.");
-		}
-	}
-
 	public void init() {
 		// TODO: Some kind of locking would be more correct, though I'm not sure
 		// I see anything that can go wrong other than some wasted cycles.
+
+		// Set up SharedPreferences.
+		sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+		spe = sp.edit();
 
 		// Create the AndroSS external binary.
 		// TODO: This would be a great time to chmod +x it, but will that stick?
@@ -161,9 +193,6 @@ public class AndroSSService extends Service implements SensorEventListener {
 		}
 
 		AndroSSService.sm = (SensorManager)getSystemService(SENSOR_SERVICE);
-		sm.registerListener(this,
-				sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-				SensorManager.SENSOR_DELAY_GAME);
 
 		AndroSSService.initialized = true;
 		Log.d(TAG, "Service: Initialized.");
@@ -316,8 +345,12 @@ public class AndroSSService extends Service implements SensorEventListener {
 					String.valueOf(finish_time - start_time.getTimeInMillis()) +
 					"ms (latency: " +
 					String.valueOf(pixel_time - start_time.getTimeInMillis()) +
-					"ms).");
+			"ms).");
 			Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
+		}
+
+		if (!AndroSSService.isPersistent()) {
+			stopSelf();
 		}
 	}
 
@@ -329,11 +362,10 @@ public class AndroSSService extends Service implements SensorEventListener {
 		return;
 	}
 	public void onSensorChanged(SensorEvent event) {
-		if (AndroSSService.enabled && AndroSSService.shakeTrigger) {
-			boolean first = false;
-			if (old_x == 0 && old_y == 0 && old_z == 0) {
-				first = true;
-			}
+		if (isEnabled() && isShakeEnabled()) {
+			Log.d(TAG, "Service: Got shake event at " + event.timestamp);
+			boolean first = (last_shake_event == 0 ? true : false);
+			boolean handled = (first ? true : false);
 
 			float x = event.values[0];
 			float y = event.values[1];
@@ -347,31 +379,27 @@ public class AndroSSService extends Service implements SensorEventListener {
 			old_y = y;
 			old_z = z;
 
-			if (!first) {
+			// We'll probably get a lot of shake events from a single
+			// physical motion, so ignore any new ones for a moment.
+			if (!first && event.timestamp - last_shake_event > IGNORE_SHAKE_INTERVAL) {
 				double magnitude = Math.sqrt(
 						(x_diff * x_diff) +
 						(y_diff * y_diff) +
 						(z_diff * z_diff));
 				if (magnitude > AndroSSService.ACCEL_THRESH) {
+					handled = true;
 					Log.d(TAG, String.format(
-							"Service: Triggering on shake of magnitude %f.",
-							magnitude));
-
-					// We'll probably get a lot of shake events from a single
-					// physical motion, so disable this trigger during the
-					// screenshot.
-					AndroSSService.setShake(false);
+							"Service: Triggering on shake of magnitude %f with tstamp %d (offset: %d).",
+							magnitude, event.timestamp, event.timestamp - last_shake_event));
 					takeScreenshot();
 					if (!AndroSSService.isPersistent()) {
-						// Because of how quickly the SensorEvents come in,
-						// stopSelf() probably won't actually result in
-						// onDestroy() getting called until after the entire
-						// event queue has settled.
-						destroy();
 						stopSelf();
 					}
-					AndroSSService.setShake(true);
 				}
+			}
+
+			if (handled) {
+				last_shake_event = event.timestamp;
 			}
 		}
 	}

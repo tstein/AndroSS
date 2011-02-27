@@ -3,6 +3,7 @@ package net.tedstein.AndroSS;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -35,35 +36,42 @@ public class ConfigurationActivity extends Activity {
 				// This gets called on resumes and rotations, so we should make
 				// sure we actually want to mess with the service before doing
 				// so.
-				boolean was_enabled = AndroSSService.isEnabled();
 				Intent i = new Intent(c, AndroSSService.class);
 				if (isChecked) {
-					if (!was_enabled) {
-						startService(i);
-					}
+					startService(i);
 				} else {
-					if (was_enabled) {
-						stopService(i);
-					}
+					stopService(i);
 				}
 			}
 		});
 
 		persistent.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				AndroSSService.setPersistent(isChecked);
+				final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+				final SharedPreferences.Editor spe = sp.edit();
+
+				spe.putBoolean(Prefs.PERSISTENT_KEY, isChecked);
+				spe.commit();
 			}
 		});
 
 		useCamera.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				CameraButtonReceiver.setEnabled(isChecked);
+				final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+				final SharedPreferences.Editor spe = sp.edit();
+
+				spe.putBoolean(Prefs.CAMERA_TRIGGER_KEY, isChecked);
+				spe.commit();
 			}
 		});
 
 		useShake.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				AndroSSService.setShake(isChecked);
+				final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+				final SharedPreferences.Editor spe = sp.edit();
+
+				spe.putBoolean(Prefs.SHAKE_TRIGGER_KEY, isChecked);
+				spe.commit();
 			}
 		});
 	}
@@ -72,15 +80,18 @@ public class ConfigurationActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 
+		final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+
 		CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
 		CheckBox persistent = (CheckBox)findViewById(R.id.PersistenceCheckBox);
-		CheckBox useCamera = (CheckBox)findViewById(R.id.CameraButtonCheckBox);
 		CheckBox useShake = (CheckBox)findViewById(R.id.ShakeCheckBox);
+		CheckBox useCamera = (CheckBox)findViewById(R.id.CameraButtonCheckBox);
 
-		enabled.setChecked(AndroSSService.isEnabled());
-		persistent.setChecked(AndroSSService.isPersistent());
-		useCamera.setChecked(CameraButtonReceiver.isEnabled());
-		useShake.setChecked(AndroSSService.isShakeEnabled());
+		enabled.setChecked(sp.getBoolean(Prefs.ENABLED_KEY, false));
+		persistent.setChecked(sp.getBoolean(Prefs.PERSISTENT_KEY, false));
+		useShake.setChecked(sp.getBoolean(Prefs.SHAKE_TRIGGER_KEY, false));
+		useCamera.setChecked(sp.getBoolean(Prefs.CAMERA_TRIGGER_KEY, false));
+
 		TextView debugString = (TextView)findViewById(R.id.DebugStringText);
 
 		debugString.setText(AndroSSService.getParamString());
