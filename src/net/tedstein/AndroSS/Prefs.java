@@ -6,4 +6,5 @@ public class Prefs {
 	public static final String PERSISTENT_KEY = "persistent";
 	public static final String SHAKE_TRIGGER_KEY = "shake_trigger";
 	public static final String CAMERA_TRIGGER_KEY = "camera_button_trigger";
+	public static final String COMPRESSION_KEY = "compression";
 }

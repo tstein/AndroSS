@@ -5,6 +5,13 @@
 <string name="ServiceStatusCheckBox_text">Enabled?</string>
 <string name="triggers_text">Trigger on...</string>
 <string name="camera_button_trigger_text">hardware camera button?</string>
-<string name="PersistenceCheckBox_text">Persistent?</string>
+<string name="PersistenceCheckBox_text">Stay enabled after each shot?</string>
 <string name="shake_trigger_text">shake?</string>
+<string-array name="compression_types">
+    <item>PNG (best; slow)</item>
+    <item>JPG HQ (90% quality, fast)</item>
+    <item>JPG fast (40% quality; faster)</item>
+</string-array>
+<string name="compression_text">Compression level:</string>
+<string name="mt_text"></string>
 </resources>

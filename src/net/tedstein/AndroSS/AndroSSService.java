@@ -25,6 +25,8 @@ public class AndroSSService extends Service implements SensorEventListener {
 		System.loadLibrary("AndroSS_nbridge");
 	}
 
+	public static enum CompressionType {PNG, JPG_HQ, JPG_FAST};
+
 	private static final String TAG = "AndroSS";
 	private static final float ACCEL_THRESH = 7.0F;
 	private static final long IGNORE_SHAKE_INTERVAL = 1000 * 1000 * 1000;
@@ -109,6 +111,20 @@ public class AndroSSService extends Service implements SensorEventListener {
 	public static void setCameraButton(boolean enable) {
 		spe.putBoolean(Prefs.CAMERA_TRIGGER_KEY, enable);
 		spe.commit();
+	}
+
+	public static CompressionType getCompressionType() {
+		if (!initialized) {
+			return CompressionType.PNG;
+		} else {
+			return CompressionType.valueOf(
+					sp.getString(Prefs.COMPRESSION_KEY,
+							CompressionType.PNG.name()));
+		}
+	}
+
+	public static void setCompressionType(CompressionType ct) {
+		spe.putString(Prefs.COMPRESSION_KEY, ct.name());
 	}
 
 	public static String getParamString() {
@@ -222,7 +238,16 @@ public class AndroSSService extends Service implements SensorEventListener {
 			// output dir not existing.
 			output.getParentFile().mkdirs();
 			FileOutputStream os = new FileOutputStream(output);
-			success = bmp.compress(Bitmap.CompressFormat.PNG, 0, os);
+			switch (getCompressionType()) {
+			case PNG:
+				success = bmp.compress(Bitmap.CompressFormat.PNG, 0, os);
+				break;
+			case JPG_HQ:
+				success = bmp.compress(Bitmap.CompressFormat.JPEG, 90, os);
+				break;
+			case JPG_FAST:
+				success = bmp.compress(Bitmap.CompressFormat.JPEG, 40, os);
+			}
 			os.flush();
 			os.close();
 		} catch (Exception e) {
@@ -242,9 +267,17 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 		cv.put(Images.Media.DATA, filename);
 		cv.put(Images.Media.SIZE, size);
-		cv.put(Images.Media.MIME_TYPE, "image/png");
 		cv.put(Images.Media.DATE_TAKEN, when);
 		cv.put(Images.Media.ORIENTATION, 0);
+		switch (getCompressionType()) {
+		case PNG:
+			cv.put(Images.Media.MIME_TYPE, "image/png");
+			break;
+		case JPG_HQ:
+		case JPG_FAST:
+			cv.put(Images.Media.MIME_TYPE, "image/jpeg");
+			break;
+		}
 
 		cr.insert(Images.Media.EXTERNAL_CONTENT_URI, cv);
 	}
@@ -302,7 +335,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 		// First order of business is to get the pixels.
 		byte[] pixels_bytes = getFBPixels(AndroSSService.files_dir, bytes);
-		long pixel_time = System.currentTimeMillis();
+		long get_pixels_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
 
 		// android.graphics.Bitmap is expecting an array of ARGB_8888 ints, so
 		// we'll need to do some conversion based on the bit depth. Extract
@@ -310,6 +343,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 		int[] pixels = new int[bytes / bpp];
 		Log.d(TAG, "Service: Converting " + String.valueOf(pixels_bytes.length) +
 		" bytes from the framebuffer.");
+		Calendar pixel_convert_start_time = Calendar.getInstance();
 		int tmp_int;
 		byte tmp_byte;
 		for (int i = 0; i < bytes; i += bpp) {
@@ -322,6 +356,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 			pixels[i / bpp] = formatPixel(tmp_int,
 					AndroSSService.c_offsets, AndroSSService.c_sizes);
 		}
+		long convert_time = Calendar.getInstance().getTimeInMillis() - pixel_convert_start_time.getTimeInMillis();
 
 		Log.d(TAG, "Service: Creating bitmap.");
 		Bitmap bmp_ss = Bitmap.createBitmap(
@@ -333,19 +368,34 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 		// Build an intelligent filename, write out to file, and register with
 		// the Android media services.
-		String filename = calToStr(start_time) + ".png";
+		String filename = calToStr(start_time);
+		switch (getCompressionType()) {
+		case PNG:
+			filename += ".png";
+			break;
+		case JPG_HQ:
+		case JPG_FAST:
+			filename += ".jpg";
+			break;
+		}
+		Calendar compress_start_time = Calendar.getInstance();
 		boolean success = writeScreenshot(bmp_ss, filename);
+		long compress_time = Calendar.getInstance().getTimeInMillis() - compress_start_time.getTimeInMillis();
 
 		Log.d(TAG, "Service: Wrote to " + filename + ": " + (success ? "success" : "failure"));
 		if (success) {
-			long finish_time = System.currentTimeMillis();
+			long total_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
 
 			registerNewScreenshot(AndroSSService.output_dir + filename, start_time.getTimeInMillis());
 			Log.d(TAG, "Service: Screenshot taken in " +
-					String.valueOf(finish_time - start_time.getTimeInMillis()) +
+					String.valueOf(total_time) +
 					"ms (latency: " +
-					String.valueOf(pixel_time - start_time.getTimeInMillis()) +
-			"ms).");
+					String.valueOf(get_pixels_time) +
+					"ms, convert: " +
+					String.valueOf(convert_time) +
+					"ms, compress: " +
+					String.valueOf(compress_time) +
+					").");
 			Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
 		}
 
@@ -363,7 +413,6 @@ public class AndroSSService extends Service implements SensorEventListener {
 	}
 	public void onSensorChanged(SensorEvent event) {
 		if (isEnabled() && isShakeEnabled()) {
-			Log.d(TAG, "Service: Got shake event at " + event.timestamp);
 			boolean first = (last_shake_event == 0 ? true : false);
 			boolean handled = (first ? true : false);
 
