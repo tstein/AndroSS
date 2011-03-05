@@ -260,15 +260,17 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
 	private void registerNewScreenshot(String filename, long when) {
-		long size = new File(filename).length();
-
 		ContentResolver cr = getContentResolver();
-		ContentValues cv = new ContentValues(5);
+		ContentValues cv = new ContentValues(7);
+		File f = new File(filename);
 
-		cv.put(Images.Media.DATA, filename);
-		cv.put(Images.Media.SIZE, size);
+		cv.put(Images.Media.DISPLAY_NAME, f.getName());
+		cv.put(Images.Media.TITLE, f.getName());
 		cv.put(Images.Media.DATE_TAKEN, when);
 		cv.put(Images.Media.ORIENTATION, 0);
+		cv.put(Images.Media.DATA, filename);
+		cv.put(Images.Media.SIZE, f.length());
+
 		switch (getCompressionType()) {
 		case PNG:
 			cv.put(Images.Media.MIME_TYPE, "image/png");
