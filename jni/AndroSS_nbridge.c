@@ -24,6 +24,12 @@ jint JNI_OnLoad(JavaVM * vm, void * reserved) {
 }
 
 
+jboolean Java_net_tedstein_AndroSS_ConfigurationActivity_testForSu(
+		JNIEnv * env, jobject this) {
+	return !(system("su -c true"));
+}
+
+
 jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 		JNIEnv * env, jobject this,
 		jstring bin_location) {

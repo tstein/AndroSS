@@ -2,10 +2,14 @@ package net.tedstein.AndroSS;
 
 import net.tedstein.AndroSS.AndroSSService.CompressionType;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -20,8 +24,48 @@ public class ConfigurationActivity extends Activity {
 		System.loadLibrary("AndroSS_nbridge");
 	}
 
-	@SuppressWarnings("unused")
 	private static final String TAG = "AndroSS";
+
+	// Native function signatures.
+	private static native boolean testForSu();
+
+	private void showRootTestMessage() {
+		Log.d(TAG, "Activity: mark");
+		new AlertDialog.Builder(this)
+		.setTitle("Checking for root")
+		.setMessage("AndroSS needs root to work, so let's see if you're " +
+					"set up properly. This is just a quick test and your su " +
+					"whitelister may distinguish between this and our normal " +
+					"operation, so no need to whitelist us right now.")
+		.setNeutralButton("Let's do this!", new OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				boolean have_root = testForSu();
+				if (!have_root) {
+					showRootTestFailedMessage();
+				}
+
+				final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+				final SharedPreferences.Editor spe = sp.edit();
+				spe.putBoolean(Prefs.HAVE_TESTED_ROOT_KEY, true);
+				spe.putBoolean(Prefs.HAVE_ROOT_KEY, have_root);
+				spe.commit();
+			}
+		})
+		.show();
+	}
+
+	private void showRootTestFailedMessage() {
+		new AlertDialog.Builder(this)
+		.setTitle("Root test failed")
+		.setMessage("Something went wrong when trying to use su. AndroSS " +
+					"only works correctly on rooted devices. If you think " +
+					"this should have worked and you have a few minutes, " +
+					"feel free to contact me through any method listed in " +
+					"this app's Market page.")
+		.setNeutralButton("Darn! :(", null)
+		.show();
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +73,12 @@ public class ConfigurationActivity extends Activity {
 		setContentView(R.layout.config);
 
 		final Context c = this;
+		final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+
+		if (sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
+			Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
+			showRootTestMessage();
+		}
 
 		CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
 		CheckBox persistent = (CheckBox)findViewById(R.id.PersistenceCheckBox);
@@ -43,12 +93,17 @@ public class ConfigurationActivity extends Activity {
 		enabled.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView,
 					boolean isChecked) {
-				// This gets called on resumes and rotations, so we should make
-				// sure we actually want to mess with the service before doing
-				// so.
+				final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+
 				Intent i = new Intent(c, AndroSSService.class);
 				if (isChecked) {
-					startService(i);
+					if (sp.getBoolean(Prefs.HAVE_ROOT_KEY, false) == false) {
+						Log.d(TAG, "Activity: Not setting Enabled to true because we lack root.");
+						showRootTestFailedMessage();
+						buttonView.setChecked(false);
+					} else {
+						startService(i);
+					}
 				} else {
 					stopService(i);
 				}
