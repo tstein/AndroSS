@@ -1,5 +1,6 @@
 #include <linux/ioctl.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +22,40 @@ jint JNI_OnLoad(JavaVM * vm, void * reserved) {
     } else {
         return JNI_VERSION_1_6;
     }
+}
+
+
+unsigned int static inline formatPixel(unsigned int in, int * offsets, int * sizes) {
+	unsigned char out[4];
+	unsigned int mask;
+
+	for (int color = 0; color < 4; ++color) {
+		// Build the mask by repeatedly shifting and incrementing.
+		mask = 0;
+		for (int bits = 0; bits < sizes[color]; ++bits) {
+			mask <<= 1;
+			++mask;
+		}
+
+		// Extract the desired bits from in, then shift them up if we have
+		// less than a full byte of information.
+		out[color] = (in >> offsets[color]) & mask;
+		out[color] <<= 8 - sizes[color];
+	}
+
+	// If the framebuffer had no alpha channel, we're about to return an
+	// invisible pixel.
+	if (sizes[3] == 0) {
+		out[3] = 255;
+	}
+
+	// Finally, combine the components, and that's a pixel.
+	unsigned int ret = 0;
+	for (int color = 3; color >= 0; --color) {
+		ret <<= 8;
+		ret |= out[color];
+	}
+	return ret;
 }
 
 
@@ -65,9 +100,16 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 }
 
 
-jbyteArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
+jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 		JNIEnv * env, jobject this,
-		jstring bin_location, jint bytes) {
+		jstring bin_location,
+		jint pixels, jint bpp,
+		jintArray offsets_j, jintArray sizes_j) {
+	// Extract color offsets and sizes from the Java array types.
+	int offsets[4], sizes[4];
+	(*env)->GetIntArrayRegion(env, offsets_j, 0, 4, offsets);
+	(*env)->GetIntArrayRegion(env, sizes_j, 0, 4, sizes);
+
 	char cmd[MAX_CMD_LEN] = {0};
 	const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
 	strncpy(cmd, "su -c    ", 9);
@@ -75,9 +117,12 @@ jbyteArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 	strncat(cmd, "/AndroSS", 16);
 	LogD("NBridge: Executing %s", cmd);
 
-	void * pixbuf = malloc(bytes);
+	// Allocate enough space to store all pixels in ARGB_8888. We'll initially
+	// put the pixels at the highest address within our buffer they can fit.
+	unsigned char * pixbuf = malloc(pixels * 4);
+	int pixbuf_offset = (pixels * 4) - (pixels * bpp);
 	char bytes_str[MAX_BYTES_DIGITS];
-	sprintf(bytes_str, "%u", bytes);
+	sprintf(bytes_str, "%u", pixels * bpp);
 
 	// Tell the external binary how many bytes to read from the framebuffer.
 	setenv(envvar, bytes_str, 1);
@@ -85,16 +130,42 @@ jbyteArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 	// And then slurp the data.
 	LogD("NBridge: Executing %s", cmd);
 	FILE * from_extbin = popen(cmd, "r");
-	int chunks_read = fread(pixbuf, bytes, 1, from_extbin);
+	int chunks_read = fread(pixbuf + pixbuf_offset, pixels * bpp, 1, from_extbin);
 	if (ferror(from_extbin) && !(feof(from_extbin))) {
 		LogE("NBridge: Error reading framebuffer data from subprocess!");
 		return 0;
 	}
 
-	// Finally, cast pixbuf as an jbyte[] and convert it to a jbyteArray we can
+	// Convert all of the pixels to ARGB_8888 according to the parameters passed
+	// in from Dalvikspace. To save space and time, we do this in-place. If each
+	// pixel is fewer than four bytes, this involves shifting data like this:
+	// (lower addresses to the left, r = raw, f = formatted, two bytes per char)
+	// < -- -- -- -- r1 r2 r3 r4 >
+	// < f1 f1 -- -- r1 r2 r3 r4 >
+	// < f1 f1 f2 f2 r1 r2 r3 r4 >
+	// < f1 f1 f2 f2 f3 f3 r3 r4 >
+	// < f1 f1 f2 f2 f3 f3 f4 f4 >
+	LogD("NBridge: Converting %u pixels.", pixels);
+	struct timeval start_tv, end_tv;
+	gettimeofday(&start_tv, NULL);
+
+	unsigned char * curr_pix = pixbuf + pixbuf_offset;
+	for (int i = 0; i < pixels; ++i) {
+		unsigned int pix = *((unsigned int *)curr_pix) >> ((4 - bpp) * 4);
+		*(unsigned int *)(pixbuf + (4 * i)) = formatPixel(pix, offsets, sizes);
+		curr_pix += bpp;
+	}
+
+	gettimeofday(&end_tv, NULL);
+	int seconds = end_tv.tv_sec - start_tv.tv_sec;
+	int useconds = end_tv.tv_usec - start_tv.tv_usec;
+	LogD("NBridge: Conversion finished in %u ms.", (seconds * 1000) + (useconds / 1000));
+
+
+	// Finally, cast pixbuf as an jint[] and convert it to a jintArray we can
 	// return to Java.
-	jbyteArray ret = (*env)->NewByteArray(env, bytes);
-	(*env)->SetByteArrayRegion(env, ret, 0, bytes, (jbyte *)pixbuf);
+	jintArray ret = (*env)->NewIntArray(env, pixels);
+	(*env)->SetIntArrayRegion(env, ret, 0, pixels, (jint *)pixbuf);
 	free(pixbuf);
 	LogD("NBridge: Returning data.");
 	return ret;

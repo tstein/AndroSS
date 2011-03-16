@@ -53,7 +53,9 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 	// Native function signatures.
 	private static native String getFBInfo(String bin_location);
-	private static native byte[] getFBPixels(String bin_location, int bytes);
+	private static native int[] getFBPixels(String bin_location,
+			int pixels, int bpp,
+			int[] offsets, int[] sizes);
 
 
 
@@ -333,32 +335,12 @@ public class AndroSSService extends Service implements SensorEventListener {
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
 
 		int bpp = AndroSSService.screen_depth / 8;
-		int bytes = screen_width * screen_height * bpp;
 
 		// First order of business is to get the pixels.
-		byte[] pixels_bytes = getFBPixels(AndroSSService.files_dir, bytes);
+		int[] pixels = getFBPixels(AndroSSService.files_dir,
+				screen_width * screen_height, bpp,
+				c_offsets, c_sizes);
 		long get_pixels_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
-
-		// android.graphics.Bitmap is expecting an array of ARGB_8888 ints, so
-		// we'll need to do some conversion based on the bit depth. Extract
-		// screen_depth / 8 bytes at a time and pass them off to formatPixel().
-		int[] pixels = new int[bytes / bpp];
-		Log.d(TAG, "Service: Converting " + String.valueOf(pixels_bytes.length) +
-		" bytes from the framebuffer.");
-		Calendar pixel_convert_start_time = Calendar.getInstance();
-		int tmp_int;
-		byte tmp_byte;
-		for (int i = 0; i < bytes; i += bpp) {
-			tmp_int = 0;
-			for (int j = bpp - 1; j >= 0; --j) {
-				tmp_byte = pixels_bytes[i + j];
-				tmp_int <<= 8;
-				tmp_int |= (0x000000FF & (int)tmp_byte);
-			}
-			pixels[i / bpp] = formatPixel(tmp_int,
-					AndroSSService.c_offsets, AndroSSService.c_sizes);
-		}
-		long convert_time = Calendar.getInstance().getTimeInMillis() - pixel_convert_start_time.getTimeInMillis();
 
 		Log.d(TAG, "Service: Creating bitmap.");
 		Bitmap bmp_ss = Bitmap.createBitmap(
@@ -393,9 +375,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 					String.valueOf(total_time) +
 					"ms (latency: " +
 					String.valueOf(get_pixels_time) +
-					"ms, convert: " +
-					String.valueOf(convert_time) +
-					"ms, compress: " +
+					"ms, compression: " +
 					String.valueOf(compress_time) +
 					").");
 			Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
