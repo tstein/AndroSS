@@ -287,49 +287,6 @@ public class AndroSSService extends Service implements SensorEventListener {
 	}
 
 
-	/**
-	 * @param in - The value of the input pixel.
-	 * @param offsets - An array of four bytes representing the offset of each
-	 * color in the input pixel. This will be interpreted as [b, g, r, a].
-	 * @param sizes - An array of four bytes representing how many bits each
-	 * color occupies in the input pixel. This will be interpreted as
-	 * [b, g, r, a].
-	 * @return The input pixel formatted as an ARGB_8888 int. 
-	 */
-	private static int formatPixel(int in, int[] offsets, int[] sizes){
-		int out[] = new int[4];
-		int mask;
-
-		for (int color = 0; color < 4; ++color) {
-			// Build the mask by repeatedly shifting and incrementing.
-			mask = 0;
-			for (int bits = 0; bits < sizes[color]; ++bits) {
-				mask <<= 1;
-				++mask;
-			}
-
-			// Extract the desired bits from in, then shift them up if we have
-			// less than a full byte of information.
-			out[color] = (in >> offsets[color]) & mask;
-			out[color] <<= 8 - sizes[color];
-		}
-
-		// If the framebuffer had no alpha channel, we're about to return an
-		// invisible pixel. 
-		if (sizes[3] == 0) {
-			out[3] = 255;
-		}
-
-		// Finally, combine the components, and that's a pixel.
-		int ret = 0;
-		for (int color = 3; color >= 0; --color) {
-			ret <<= 8;
-			ret |= out[color];
-		}
-		return ret;
-	}
-
-
 	public void takeScreenshot() {
 		Calendar start_time = Calendar.getInstance();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");

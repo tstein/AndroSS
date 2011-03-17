@@ -25,6 +25,15 @@ jint JNI_OnLoad(JavaVM * vm, void * reserved) {
 }
 
 
+/**
+ * @param in - The value of the input pixel.
+ * @param offsets - An array of four bytes representing the offset of each
+ * color in the input pixel. This will be interpreted as [b, g, r, a].
+ * @param sizes - An array of four bytes representing how many bits each
+ * color occupies in the input pixel. This will be interpreted as
+ * [b, g, r, a].
+ * @return The input pixel formatted as an ARGB_8888 int.
+ */
 unsigned int static inline formatPixel(unsigned int in, int * offsets, int * sizes) {
 	unsigned char out[4];
 	unsigned int mask;
@@ -151,7 +160,7 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 
 	unsigned char * curr_pix = pixbuf + pixbuf_offset;
 	for (int i = 0; i < pixels; ++i) {
-		unsigned int pix = *((unsigned int *)curr_pix) >> ((4 - bpp) * 4);
+		unsigned int pix = *((unsigned int *)curr_pix) >> ((4 - bpp) * 8);
 		*(unsigned int *)(pixbuf + (4 * i)) = formatPixel(pix, offsets, sizes);
 		curr_pix += bpp;
 	}
