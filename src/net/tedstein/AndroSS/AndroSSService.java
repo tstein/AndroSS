@@ -7,6 +7,7 @@ import java.util.Calendar;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -14,7 +15,10 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.provider.MediaStore.Images;
 import android.util.Base64;
 import android.util.Log;
@@ -146,7 +150,6 @@ public class AndroSSService extends Service implements SensorEventListener {
 	}
 
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Toast.makeText(this, "AndroSS service started.", Toast.LENGTH_SHORT).show();
 		if (intent.getBooleanExtra("TAKE_SCREENSHOT", false)) {
 			takeScreenshot();
 		}
@@ -162,6 +165,8 @@ public class AndroSSService extends Service implements SensorEventListener {
 				sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
 				SensorManager.SENSOR_DELAY_UI);
 		setEnabled(true);
+
+		Toast.makeText(this, "AndroSS service started.", Toast.LENGTH_SHORT).show();
 		Log.d(TAG, "Service: Created.");
 	}
 
@@ -287,6 +292,24 @@ public class AndroSSService extends Service implements SensorEventListener {
 	}
 
 
+	private void notifyUser() {
+		if (sp.getBoolean(Prefs.AUDIO_FEEDBACK_KEY, false)) {
+			Uri default_notification =
+				RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+			RingtoneManager.getRingtone(this, default_notification).play();
+		}
+
+		if (sp.getBoolean(Prefs.VIBRATE_FEEDBACK_KEY, false)) {
+			Vibrator vibe = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+			vibe.vibrate(300);
+		}
+
+		if (sp.getBoolean(Prefs.TOAST_FEEDBACK_KEY, false)) {
+			Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
+		}
+	}
+
+
 	public void takeScreenshot() {
 		Calendar start_time = Calendar.getInstance();
 		Log.d(TAG, "Service: Getting framebuffer pixels.");
@@ -335,7 +358,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 					"ms, compression: " +
 					String.valueOf(compress_time) +
 					").");
-			Toast.makeText(this, "Took screenshot.", Toast.LENGTH_SHORT).show();
+			notifyUser();
 		}
 
 		if (!AndroSSService.isPersistent()) {

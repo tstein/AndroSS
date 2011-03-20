@@ -14,4 +14,8 @@
 </string-array>
 <string name="compression_text">Compression level:</string>
 <string name="mt_text"></string>
+<string name="notifications_text">Feedback:</string>
+<string name="toast_notify_text">toast popup</string>
+<string name="audio_notify_text">sound</string>
+<string name="vibe_notify_text">vibration</string>
 </resources>

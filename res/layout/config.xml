@@ -11,6 +11,11 @@
 <TextView android:text="@string/compression_text" android:id="@+id/Compression" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
 <Spinner android:id="@+id/CompressionSpinner" android:layout_width="fill_parent" android:layout_height="wrap_content"></Spinner>
 
+<TextView android:id="@+id/Notifications" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/notifications_text"></TextView>
+<CheckBox android:id="@+id/ToastNotifyCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/toast_notify_text"></CheckBox>
+<CheckBox android:id="@+id/AudioNotifyCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/audio_notify_text"></CheckBox>
+<CheckBox android:id="@+id/VibeNotifyCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/vibe_notify_text"></CheckBox>
+
 <TextView android:text="@string/triggers_text" android:id="@+id/Triggers" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
 <CheckBox android:text="@string/shake_trigger_text" android:id="@+id/ShakeCheckBox" android:layout_width="wrap_content" android:layout_height="wrap_content"></CheckBox>
 <CheckBox android:id="@+id/CameraButtonCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/camera_button_trigger_text"></CheckBox>
