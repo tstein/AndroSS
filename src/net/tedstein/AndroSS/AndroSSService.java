@@ -301,7 +301,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 		if (sp.getBoolean(Prefs.VIBRATE_FEEDBACK_KEY, false)) {
 			Vibrator vibe = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
-			vibe.vibrate(300);
+			vibe.vibrate(175);
 		}
 
 		if (sp.getBoolean(Prefs.TOAST_FEEDBACK_KEY, false)) {
