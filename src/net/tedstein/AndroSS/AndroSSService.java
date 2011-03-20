@@ -157,30 +157,34 @@ public class AndroSSService extends Service implements SensorEventListener {
 	}
 
 	public void onCreate() {
-		if (!AndroSSService.initialized) {
-			init();
+		boolean initialized = AndroSSService.initialized || init();
+
+		if (initialized) {
+			sm.registerListener(this,
+					sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+					SensorManager.SENSOR_DELAY_UI);
+			setEnabled(true);
+
+			Toast.makeText(this, "AndroSS service started.", Toast.LENGTH_SHORT).show();
+			Log.d(TAG, "Service: Created.");
+		} else {
+			stopSelf();
 		}
-
-		sm.registerListener(this,
-				sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-				SensorManager.SENSOR_DELAY_UI);
-		setEnabled(true);
-
-		Toast.makeText(this, "AndroSS service started.", Toast.LENGTH_SHORT).show();
-		Log.d(TAG, "Service: Created.");
 	}
 
 	public void onDestroy() {
-		setEnabled(false);
-		sm.unregisterListener(this);
-		Log.d(TAG, "Service: Destroyed.");
-		Toast.makeText(this, "AndroSS service stopped.", Toast.LENGTH_SHORT).show();
+		if (AndroSSService.initialized) {
+			setEnabled(false);
+			sm.unregisterListener(this);
+			Log.d(TAG, "Service: Destroyed.");
+			Toast.makeText(this, "AndroSS service stopped.", Toast.LENGTH_SHORT).show();
+		}
 	}
 
 
 
 	// State control functions.
-	public void init() {
+	private boolean init() {
 		// TODO: Some kind of locking would be more correct, though I'm not sure
 		// I see anything that can go wrong other than some wasted cycles.
 
@@ -201,6 +205,15 @@ public class AndroSSService extends Service implements SensorEventListener {
 		// Get screen info.
 		AndroSSService.files_dir = getFilesDir().getAbsolutePath();
 		String param_string = getFBInfo(AndroSSService.files_dir);
+		if (param_string.equals("")) {
+			Log.e(TAG,"Service: Got empty param string from native!");
+			Toast.makeText(this,
+					"AndroSS could not initialize - problem with su?",
+					Toast.LENGTH_LONG)
+			.show();
+			return false;
+		}
+
 		Log.d(TAG, "Service: Got framebuffer params: " + param_string);
 		String[] params = param_string.split(" ");
 
@@ -219,6 +232,8 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 		AndroSSService.initialized = true;
 		Log.d(TAG, "Service: Initialized.");
+
+		return true;
 	}
 
 
