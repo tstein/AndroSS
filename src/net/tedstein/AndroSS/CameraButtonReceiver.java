@@ -7,19 +7,19 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class CameraButtonReceiver extends BroadcastReceiver {
-	private static final String TAG = "AndroSS";
+    private static final String TAG = "AndroSS";
 
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		if (AndroSSService.isCameraButtonEnabled() && AndroSSService.isEnabled()) {
-			Log.d(TAG, "CameraButtonReceiver: Handling broadcast.");
-			Intent i = new Intent(context, AndroSSService.class);
-			i.putExtra("TAKE_SCREENSHOT", true);
-			context.startService(i);
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (AndroSSService.isCameraButtonEnabled() && AndroSSService.isEnabled()) {
+            Log.d(TAG, "CameraButtonReceiver: Handling broadcast.");
+            Intent i = new Intent(context, AndroSSService.class);
+            i.putExtra("TAKE_SCREENSHOT", true);
+            context.startService(i);
 
-			// This will prevent the real camera app from launching.
-			abortBroadcast();
-			Toast.makeText(context, "Took screenshot.", Toast.LENGTH_SHORT).show();
-		}
-	}
+            // This will prevent the real camera app from launching.
+            abortBroadcast();
+            Toast.makeText(context, "Took screenshot.", Toast.LENGTH_SHORT).show();
+        }
+    }
 }

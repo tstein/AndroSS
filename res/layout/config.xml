@@ -1,24 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
-	<LinearLayout android:id="@+id/MasterLinearLayout"
-	    android:orientation="vertical"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent">
-<CheckBox android:layout_width="wrap_content" android:id="@+id/ServiceStatusCheckBox" android:text="@string/ServiceStatusCheckBox_text" android:layout_height="wrap_content"></CheckBox>
-<CheckBox android:layout_width="wrap_content" android:id="@+id/PersistenceCheckBox" android:text="@string/PersistenceCheckBox_text" android:layout_height="wrap_content"></CheckBox>
-<TextView android:text="@string/compression_text" android:id="@+id/Compression" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-<Spinner android:id="@+id/CompressionSpinner" android:layout_width="fill_parent" android:layout_height="wrap_content"></Spinner>
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:orientation="vertical">
+  <LinearLayout android:id="@+id/MasterLinearLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    <CheckBox android:id="@+id/ServiceStatusCheckBox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/ServiceStatusCheckBox_text"/>
+    <CheckBox android:id="@+id/PersistenceCheckBox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/PersistenceCheckBox_text"/>
+    <TextView android:id="@+id/Compression"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/compression_text"/>
+    <Spinner android:id="@+id/CompressionSpinner"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"/>
 
-<TextView android:id="@+id/Notifications" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/notifications_text"></TextView>
-<CheckBox android:id="@+id/ToastNotifyCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/toast_notify_text"></CheckBox>
-<CheckBox android:id="@+id/AudioNotifyCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/audio_notify_text"></CheckBox>
-<CheckBox android:id="@+id/VibeNotifyCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/vibe_notify_text"></CheckBox>
+    <TextView android:id="@+id/Notifications"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/notifications_text"/>
+    <CheckBox android:id="@+id/ToastNotifyCheckBox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/toast_notify_text"/>
+    <CheckBox android:id="@+id/AudioNotifyCheckBox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/audio_notify_text"/>
+    <CheckBox android:id="@+id/VibeNotifyCheckBox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/vibe_notify_text"/>
 
-<TextView android:text="@string/triggers_text" android:id="@+id/Triggers" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-<CheckBox android:text="@string/shake_trigger_text" android:id="@+id/ShakeCheckBox" android:layout_width="wrap_content" android:layout_height="wrap_content"></CheckBox>
-<CheckBox android:id="@+id/CameraButtonCheckBox" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/camera_button_trigger_text"></CheckBox>
-<TextView android:id="@+id/DebugStringText" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/mt_text"></TextView>
-    </LinearLayout>
+    <TextView android:id="@+id/Triggers"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/triggers_text"/>
+    <CheckBox android:id="@+id/ShakeCheckBox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/shake_trigger_text"/>
+    <CheckBox android:id="@+id/CameraButtonCheckBox"
+      android:layout_height="wrap_content"
+      android:layout_width="wrap_content"
+      android:text="@string/camera_button_trigger_text"/>
+    <TextView android:id="@+id/DebugStringText"
+      android:layout_height="wrap_content"
+      android:layout_width="wrap_content"
+      android:text="@string/mt_text"/>
+  </LinearLayout>
 </ScrollView>
+

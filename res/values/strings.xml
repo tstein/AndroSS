@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
-    <string name="app_name">AndroSS</string>
-<string name="ServiceStatusCheckBox_text">Enabled?</string>
-<string name="triggers_text">Trigger on...</string>
-<string name="camera_button_trigger_text">hardware camera button?</string>
-<string name="PersistenceCheckBox_text">Stay enabled after each shot?</string>
-<string name="shake_trigger_text">shake?</string>
-<string-array name="compression_types">
+  <string name="app_name">AndroSS</string>
+  <string name="ServiceStatusCheckBox_text">Enabled?</string>
+  <string name="PersistenceCheckBox_text">Stay enabled after each shot?</string>
+
+  <string name="compression_text">Compression level:</string>
+  <string-array name="compression_types">
     <item>PNG (best; slow)</item>
     <item>JPG HQ (90% quality, fast)</item>
     <item>JPG fast (40% quality; faster)</item>
-</string-array>
-<string name="compression_text">Compression level:</string>
-<string name="mt_text"></string>
-<string name="notifications_text">Feedback:</string>
-<string name="toast_notify_text">toast popup</string>
-<string name="audio_notify_text">sound</string>
-<string name="vibe_notify_text">vibration</string>
+  </string-array>
+
+  <string name="notifications_text">Feedback:</string>
+  <string name="toast_notify_text">toast popup</string>
+  <string name="audio_notify_text">sound</string>
+  <string name="vibe_notify_text">vibration</string>
+
+  <string name="triggers_text">Trigger on...</string>
+  <string name="camera_button_trigger_text">hardware camera button?</string>
+  <string name="shake_trigger_text">shake?</string>
+
+  <string name="mt_text"></string>
 </resources>
