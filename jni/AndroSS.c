@@ -1,5 +1,6 @@
 #include <linux/fb.h>
 #include <sys/ioctl.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@ static const char * TAG = "AndroSS";
 #include "android.h"
 
 #define PARAM_BUFFER_SIZE 32
+#define ERR_BUFFER_SIZE 256
 #define FD_STDOUT 1
 
 
@@ -94,7 +96,11 @@ int main(int argc, const char * argv[])
     int fb_fd = open("/dev/fb0", O_RDONLY);
 #endif
     if (fb_fd < 0) {
-        LogE("External: Could not open framebuffer device. Permissions problem?");
+        char * errstr = strerror(errno);
+        char * errmsg = (char *)calloc(ERR_BUFFER_SIZE, sizeof(char));
+        strncpy(errmsg, "External: Could not open framebuffer device: ", 45);
+        strncpy(errmsg + 45, errstr, ERR_BUFFER_SIZE - 45);
+        LogE(errmsg);
         return(1);
     }
 
