@@ -30,7 +30,6 @@ public class ConfigurationActivity extends Activity {
     private static native boolean testForSu();
 
     private void showRootTestMessage() {
-        Log.d(TAG, "Activity: mark");
         new AlertDialog.Builder(this)
         .setTitle("Checking for root")
         .setMessage("AndroSS needs root to work, so let's see if you're " +
