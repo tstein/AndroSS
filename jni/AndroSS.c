@@ -13,6 +13,11 @@ static const char * TAG = "AndroSS";
 #define PARAM_BUFFER_SIZE 32
 #define ERR_BUFFER_SIZE 256
 #define FD_STDOUT 1
+#ifdef ANDROID
+static const char * FB_PATH = "/dev/graphics/fb0";
+#else
+static const char * FB_PATH = "/dev/fb0";
+#endif
 
 
 /*
@@ -90,11 +95,7 @@ int writeFBData(int output_fd, int fb_fd, int fb_bytes)
 int main(int argc, const char * argv[])
 {
     // Find and open the correct framebuffer device.
-#ifdef ANDROID
-    int fb_fd = open("/dev/graphics/fb0", O_RDONLY);
-#else
-    int fb_fd = open("/dev/fb0", O_RDONLY);
-#endif
+    int fb_fd = open(FB_PATH, O_RDONLY);
     if (fb_fd < 0) {
         char * errstr = strerror(errno);
         char * errmsg = (char *)calloc(ERR_BUFFER_SIZE, sizeof(char));
