@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
 
 public class CameraButtonReceiver extends BroadcastReceiver {
     private static final String TAG = "AndroSS";
@@ -19,7 +18,6 @@ public class CameraButtonReceiver extends BroadcastReceiver {
 
             // This will prevent the real camera app from launching.
             abortBroadcast();
-            Toast.makeText(context, "Took screenshot.", Toast.LENGTH_SHORT).show();
         }
     }
 }
