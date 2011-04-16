@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -65,6 +68,30 @@ public class ConfigurationActivity extends Activity {
         .setNeutralButton("Darn! :(", null)
         .show();
     }
+
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.config, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.config_more_settings:
+            Intent i = new Intent(this, MoreSettings.class);
+            startActivity(i);
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

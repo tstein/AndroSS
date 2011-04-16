@@ -133,6 +133,14 @@ public class AndroSSService extends Service implements SensorEventListener {
         spe.putString(Prefs.COMPRESSION_KEY, ct.name());
     }
 
+    public static String getOutputDir() {
+        return AndroSSService.output_dir;
+    }
+
+    public static void setOutputDir(String new_dir) {
+        AndroSSService.output_dir = new_dir;
+    }
+
     public static String getParamString() {
         if (AndroSSService.initialized) {
             return getFBInfo(AndroSSService.files_dir);

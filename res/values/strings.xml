@@ -20,5 +20,19 @@
   <string name="camera_button_trigger_text">hardware camera button?</string>
   <string name="shake_trigger_text">shake?</string>
 
+  <string name="more_settings_menu">(More) Settings</string>
+  <string name="screenshot_dir_prompt">Save screenshots to:</string>
+  <string name="goto_debug_prompt">Debug info</string>
+
   <string name="empty_param_error">AndroSS could not initialize - problem with su?</string>
+
+  <string name="framebuffer_info">Framebuffer parameters:</string>
+  <string name="width_label">width</string>
+  <string name="height_label">height</string>
+  <string name="depth_label">depth</string>
+  <string name="red">red</string>
+  <string name="green">green</string>
+  <string name="blue">blue</string>
+  <string name="alpha">alpha</string>
+  <string name="color_param">%1$s\t\t\t\t%2$s bits at offset %3$s</string>
 </resources>

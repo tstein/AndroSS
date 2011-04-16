@@ -13,6 +13,8 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
+    <activity android:name="MoreSettings"/>
+    <activity android:name="DebugInfo"/>
 
     <service android:name="AndroSSService"></service>
 
