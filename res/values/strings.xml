@@ -7,7 +7,7 @@
   <string name="compression_text">Compression level:</string>
   <string-array name="compression_types">
     <item>PNG (best; slow)</item>
-    <item>JPG HQ (90% quality, fast)</item>
+    <item>JPG HQ (90% quality; fast)</item>
     <item>JPG fast (40% quality; faster)</item>
   </string-array>
 
