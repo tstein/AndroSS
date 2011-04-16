@@ -25,6 +25,7 @@
   <string name="goto_debug_prompt">Debug info</string>
 
   <string name="empty_param_error">AndroSS could not initialize - problem with su?</string>
+  <string name="debug_info_error">AndroSS could not initialize or has not been initialized yet. Try checking enable in the main settings.</string>
 
   <string name="framebuffer_info">Framebuffer parameters:</string>
   <string name="width_label">width</string>
