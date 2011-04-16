@@ -208,7 +208,7 @@ public class AndroSSService extends Service implements SensorEventListener {
         if (param_string.equals("")) {
             Log.e(TAG,"Service: Got empty param string from native!");
             Toast.makeText(this,
-                    "AndroSS could not initialize - problem with su?",
+                    getString(R.string.empty_param_error),
                     Toast.LENGTH_LONG)
             .show();
             return false;
