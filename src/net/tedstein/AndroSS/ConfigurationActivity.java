@@ -232,9 +232,5 @@ public class ConfigurationActivity extends Activity {
         notifyToast.setChecked(sp.getBoolean(Prefs.TOAST_FEEDBACK_KEY, false));
         notifyAudio.setChecked(sp.getBoolean(Prefs.AUDIO_FEEDBACK_KEY, false));
         notifyVibe.setChecked(sp.getBoolean(Prefs.VIBRATE_FEEDBACK_KEY, false));
-
-//      TextView debugString = (TextView)findViewById(R.id.DebugStringText);
-//
-//      debugString.setText(AndroSSService.getParamString());
     }
 }

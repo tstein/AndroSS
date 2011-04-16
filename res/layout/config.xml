@@ -52,10 +52,6 @@
       android:layout_height="wrap_content"
       android:layout_width="wrap_content"
       android:text="@string/camera_button_trigger_text"/>
-    <TextView android:id="@+id/DebugStringText"
-      android:layout_height="wrap_content"
-      android:layout_width="wrap_content"
-      android:text="@string/mt_text"/>
   </LinearLayout>
 </ScrollView>
 
