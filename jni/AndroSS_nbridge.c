@@ -75,7 +75,8 @@ jintArray formatAllPixels(
         int pixbuf_offset,
         int * offsets,
         int * sizes,
-        int bpp) {
+        int bpp,
+        int skip_garbage) {
     // Convert all of the pixels to ARGB_8888 according to the parameters passed
     // in from Dalvikspace. To save space and time, we do this in-place. If each
     // pixel is fewer than four bytes, this involves shifting data like this:
@@ -89,6 +90,7 @@ jintArray formatAllPixels(
     struct timeval start_tv, end_tv;
     gettimeofday(&start_tv, NULL);
 
+    pixbuf += skip_garbage;
     unsigned char * curr_pix = pixbuf + pixbuf_offset;
     for (int i = 0; i < pixels; ++i) {
         unsigned int pix = *((unsigned int *)curr_pix) >> ((4 - bpp) * 8);
@@ -201,7 +203,11 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsGeneric(
         return 0;
     }
 
-    jintArray ret = formatAllPixels(env, pixels, pixbuf, pixbuf_offset, offsets, sizes, bpp);
+    jintArray ret = formatAllPixels(
+            env,
+            pixels, pixbuf, pixbuf_offset,
+            offsets, sizes, bpp,
+            0);
     free(pixbuf);
     return ret;
 }
@@ -240,5 +246,38 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsTegra2(
         jstring bin_location,
         jint pixels, jint bpp,
         jintArray offsets_j, jintArray sizes_j) {
+    // fbread drops some crap before it starts talking pixels.
+    const int skip_bytes = 52;
+
+    // Extract color offsets and sizes from the Java array types.
+    int offsets[4], sizes[4];
+    (*env)->GetIntArrayRegion(env, offsets_j, 0, 4, offsets);
+    (*env)->GetIntArrayRegion(env, sizes_j, 0, 4, sizes);
+
+    char cmd[MAX_CMD_LEN] = {0};
+    const char * fbread_path = (*env)->GetStringUTFChars(env, bin_location, 0);
+    strncpy(cmd, fbread_path, MAX_CMD_LEN - 1);
+    LogD("NBridge: Executing %s", cmd);
+
+    // Allocate enough space to store all pixels in ARGB_8888. We'll initially
+    // put the pixels at the highest address within our buffer they can fit.
+    unsigned char * pixbuf = malloc((pixels * 4) + skip_bytes);
+    int pixbuf_offset = (pixels * 4) - (pixels * bpp);
+
+    // And then slurp the data.
+    LogD("NBridge: Executing %s", cmd);
+    FILE * from_extbin = popen(cmd, "r");
+    int chunks_read = fread(pixbuf + pixbuf_offset, pixels * bpp, 1, from_extbin);
+    if (ferror(from_extbin) && !(feof(from_extbin))) {
+        LogE("NBridge: Error reading framebuffer data from subprocess!");
+        return 0;
+    }
+
+    jintArray ret = formatAllPixels(env,
+            pixels, pixbuf, pixbuf_offset,
+            offsets, sizes, bpp,
+            skip_bytes);
+    free(pixbuf);
+    return ret;
 }
 
