@@ -68,6 +68,49 @@ unsigned int static inline formatPixel(unsigned int in, int * offsets, int * siz
 }
 
 
+jintArray formatAllPixels(
+        JNIEnv * env,
+        int pixels,
+        unsigned char * pixbuf,
+        int pixbuf_offset,
+        int * offsets,
+        int * sizes,
+        int bpp) {
+    // Convert all of the pixels to ARGB_8888 according to the parameters passed
+    // in from Dalvikspace. To save space and time, we do this in-place. If each
+    // pixel is fewer than four bytes, this involves shifting data like this:
+    // (lower addresses to the left, r = raw, f = formatted, two bytes per char)
+    // < -- -- -- -- r1 r2 r3 r4 >
+    // < f1 f1 -- -- r1 r2 r3 r4 >
+    // < f1 f1 f2 f2 r1 r2 r3 r4 >
+    // < f1 f1 f2 f2 f3 f3 r3 r4 >
+    // < f1 f1 f2 f2 f3 f3 f4 f4 >
+    LogD("NBridge: Converting %u pixels.", pixels);
+    struct timeval start_tv, end_tv;
+    gettimeofday(&start_tv, NULL);
+
+    unsigned char * curr_pix = pixbuf + pixbuf_offset;
+    for (int i = 0; i < pixels; ++i) {
+        unsigned int pix = *((unsigned int *)curr_pix) >> ((4 - bpp) * 8);
+        *(unsigned int *)(pixbuf + (4 * i)) = formatPixel(pix, offsets, sizes);
+        curr_pix += bpp;
+    }
+
+    gettimeofday(&end_tv, NULL);
+    int seconds = end_tv.tv_sec - start_tv.tv_sec;
+    int useconds = end_tv.tv_usec - start_tv.tv_usec;
+    LogD("NBridge: Conversion finished in %u ms.", (seconds * 1000) + (useconds / 1000));
+
+
+    // Finally, cast pixbuf as a jint[] and convert it to a jintArray we can
+    // return to Java.
+    jintArray ret = (*env)->NewIntArray(env, pixels);
+    (*env)->SetIntArrayRegion(env, ret, 0, pixels, (jint *)pixbuf);
+    LogD("NBridge: Returning data.");
+    return ret;
+}
+
+
 
 /*
  * Tests that need to be done in native code.
@@ -158,38 +201,8 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsGeneric(
         return 0;
     }
 
-    // Convert all of the pixels to ARGB_8888 according to the parameters passed
-    // in from Dalvikspace. To save space and time, we do this in-place. If each
-    // pixel is fewer than four bytes, this involves shifting data like this:
-    // (lower addresses to the left, r = raw, f = formatted, two bytes per char)
-    // < -- -- -- -- r1 r2 r3 r4 >
-    // < f1 f1 -- -- r1 r2 r3 r4 >
-    // < f1 f1 f2 f2 r1 r2 r3 r4 >
-    // < f1 f1 f2 f2 f3 f3 r3 r4 >
-    // < f1 f1 f2 f2 f3 f3 f4 f4 >
-    LogD("NBridge: Converting %u pixels.", pixels);
-    struct timeval start_tv, end_tv;
-    gettimeofday(&start_tv, NULL);
-
-    unsigned char * curr_pix = pixbuf + pixbuf_offset;
-    for (int i = 0; i < pixels; ++i) {
-        unsigned int pix = *((unsigned int *)curr_pix) >> ((4 - bpp) * 8);
-        *(unsigned int *)(pixbuf + (4 * i)) = formatPixel(pix, offsets, sizes);
-        curr_pix += bpp;
-    }
-
-    gettimeofday(&end_tv, NULL);
-    int seconds = end_tv.tv_sec - start_tv.tv_sec;
-    int useconds = end_tv.tv_usec - start_tv.tv_usec;
-    LogD("NBridge: Conversion finished in %u ms.", (seconds * 1000) + (useconds / 1000));
-
-
-    // Finally, cast pixbuf as an jint[] and convert it to a jintArray we can
-    // return to Java.
-    jintArray ret = (*env)->NewIntArray(env, pixels);
-    (*env)->SetIntArrayRegion(env, ret, 0, pixels, (jint *)pixbuf);
+    jintArray ret = formatAllPixels(env, pixels, pixbuf, pixbuf_offset, offsets, sizes, bpp);
     free(pixbuf);
-    LogD("NBridge: Returning data.");
     return ret;
 }
 
