@@ -214,6 +214,25 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsGeneric(
 jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoTegra2(
         JNIEnv * env, jobject this,
         jstring bin_location) {
+    char strbuf[MAX_INFO_BYTES] = {0};
+    jstring ret = (*env)->NewStringUTF(env, strbuf);
+    char cmd[MAX_CMD_LEN] = {0};
+    const char * fbread_path = (*env)->GetStringUTFChars(env, bin_location, 0);
+
+    strncpy(cmd, fbread_path, MAX_CMD_LEN - 17);
+    // stdout is a bunch of pixels, but stderr is full of useful metadata.
+    strncat(cmd, " 2>&1 >/dev/null", 16);
+
+    LogD("NBridge: Executing %s", cmd);
+    FILE * from_extbin = popen(cmd, "r");
+    int bytes_read = fread(strbuf, MAX_INFO_BYTES, 1, from_extbin);
+    if (ferror(from_extbin)) {
+        LogE("Nbridge: Error reading from subprocess!");
+    } else {
+        ret = (*env)->NewStringUTF(env, strbuf);
+    }
+    pclose(from_extbin);
+    return ret;
 }
 
 jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsTegra2(
