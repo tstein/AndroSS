@@ -56,6 +56,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Native function signatures.
+    public static native boolean testForTegra2();
     private static native String getFBInfo(String bin_location);
     private static native int[] getFBPixels(String bin_location,
             int pixels, int bpp,

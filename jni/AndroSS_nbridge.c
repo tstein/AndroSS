@@ -73,6 +73,11 @@ jboolean Java_net_tedstein_AndroSS_ConfigurationActivity_testForSu(
     return !(system("su -c true"));
 }
 
+jboolean Java_net_tedstein_AndroSS_AndroSSService_testForTegra2(
+        JNIEnv * env, jobject this) {
+    return !(system("/system/bin/fbread 2>&1 >/dev/null"));
+}
+
 
 jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
         JNIEnv * env, jobject this,
