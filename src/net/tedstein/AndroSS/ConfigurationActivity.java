@@ -29,9 +29,6 @@ public class ConfigurationActivity extends Activity {
 
     private static final String TAG = "AndroSS";
 
-    // Native function signatures.
-    private static native boolean testForSu();
-
     private void showRootTestMessage() {
         new AlertDialog.Builder(this)
         .setTitle("Checking for root")
@@ -42,7 +39,7 @@ public class ConfigurationActivity extends Activity {
         .setNeutralButton("Let's do this!", new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                boolean have_root = testForSu();
+                boolean have_root = AndroSSService.testForSu();
                 if (!have_root) {
                     showRootTestFailedMessage();
                 }

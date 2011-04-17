@@ -56,9 +56,14 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Native function signatures.
+    public static native boolean testForSu();
     public static native boolean testForTegra2();
-    private static native String getFBInfo(String bin_location);
-    private static native int[] getFBPixels(String bin_location,
+    private static native String getFBInfoGeneric(String bin_location);
+    private static native int[] getFBPixelsGeneric(String bin_location,
+            int pixels, int bpp,
+            int[] offsets, int[] sizes);
+    private static native String getFBInfoTegra2(String bin_location);
+    private static native int[] getFBPixelsTegra2(String bin_location,
             int pixels, int bpp,
             int[] offsets, int[] sizes);
 
@@ -144,7 +149,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     public static String getParamString() {
         if (AndroSSService.initialized) {
-            return getFBInfo(AndroSSService.files_dir);
+            return getFBInfoGeneric(AndroSSService.files_dir);
         } else {
             return "";
         }
@@ -213,7 +218,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
         // Get screen info.
         AndroSSService.files_dir = getFilesDir().getAbsolutePath();
-        String param_string = getFBInfo(AndroSSService.files_dir);
+        String param_string = getFBInfoGeneric(AndroSSService.files_dir);
         if (param_string.equals("")) {
             Log.e(TAG,"Service: Got empty param string from native!");
             Toast.makeText(this,
@@ -341,7 +346,7 @@ public class AndroSSService extends Service implements SensorEventListener {
         int bpp = AndroSSService.screen_depth / 8;
 
         // First order of business is to get the pixels.
-        int[] pixels = getFBPixels(AndroSSService.files_dir,
+        int[] pixels = getFBPixelsGeneric(AndroSSService.files_dir,
                 screen_width * screen_height, bpp,
                 c_offsets, c_sizes);
         long get_pixels_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();

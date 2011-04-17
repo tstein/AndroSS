@@ -68,7 +68,11 @@ unsigned int static inline formatPixel(unsigned int in, int * offsets, int * siz
 }
 
 
-jboolean Java_net_tedstein_AndroSS_ConfigurationActivity_testForSu(
+
+/*
+ * Tests that need to be done in native code.
+ */
+jboolean Java_net_tedstein_AndroSS_AndroSSService_testForSu(
         JNIEnv * env, jobject this) {
     return !(system("su -c true"));
 }
@@ -79,7 +83,11 @@ jboolean Java_net_tedstein_AndroSS_AndroSSService_testForTegra2(
 }
 
 
-jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
+
+/*
+ * Generic screenshot code for devices where we have to go root and read fb0.
+ */
+jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoGeneric(
         JNIEnv * env, jobject this,
         jstring bin_location) {
     char strbuf[MAX_INFO_BYTES] = {0};
@@ -114,7 +122,7 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 }
 
 
-jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
+jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsGeneric(
         JNIEnv * env, jobject this,
         jstring bin_location,
         jint pixels, jint bpp,
@@ -183,5 +191,22 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     free(pixbuf);
     LogD("NBridge: Returning data.");
     return ret;
+}
+
+
+
+/*
+ * Screenshot code for Tegra 2 devices.
+ */
+jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoTegra2(
+        JNIEnv * env, jobject this,
+        jstring bin_location) {
+}
+
+jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsTegra2(
+        JNIEnv * env, jobject this,
+        jstring bin_location,
+        jint pixels, jint bpp,
+        jintArray offsets_j, jintArray sizes_j) {
 }
 
