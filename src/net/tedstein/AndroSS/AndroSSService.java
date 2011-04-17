@@ -218,8 +218,8 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     // State control functions.
     private boolean init() {
-        // TODO: Some kind of locking would be more correct, though I'm not sure
-        // I see anything that can go wrong other than some wasted cycles.
+        // Some kind of locking would be more correct, though I'm not sure I see anything that can
+        // go wrong other than some wasted cycles.
 
         // Set up SharedPreferences.
         sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
@@ -230,7 +230,6 @@ public class AndroSSService extends Service implements SensorEventListener {
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
             // Create the AndroSS external binary.
-            // TODO: This would be a great time to chmod +x it, but will that stick?
             try {
                 FileOutputStream myfile = openFileOutput("AndroSS", MODE_PRIVATE);
                 myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
