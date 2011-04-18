@@ -3,6 +3,8 @@ package net.tedstein.AndroSS;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.Service;
 import android.content.ContentResolver;
@@ -226,7 +228,6 @@ public class AndroSSService extends Service implements SensorEventListener {
         spe = sp.edit();
 
         String param_string;
-        String[] params;
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
             // Create the AndroSS external binary.
@@ -251,7 +252,7 @@ public class AndroSSService extends Service implements SensorEventListener {
             }
 
             Log.d(TAG, "Service: Got framebuffer params: " + param_string);
-            params = param_string.split(" ");
+            String[] params = param_string.split(" ");
 
             AndroSSService.screen_width = Integer.parseInt(params[0]);
             AndroSSService.screen_height = Integer.parseInt(params[1]);
@@ -266,6 +267,39 @@ public class AndroSSService extends Service implements SensorEventListener {
             break;
         case TEGRA_2:
             param_string = getFBInfoTegra2(AndroSSService.fbread_path);
+            Pattern p = Pattern.compile("(\\d)+x(\\d+)\\s+format\\s+(\\d+)");
+            Matcher m = p.matcher(param_string);
+
+            AndroSSService.screen_width = Integer.parseInt(m.group(1));
+            AndroSSService.screen_height = Integer.parseInt(m.group(2));
+
+            Log.d(TAG, "Service: Got pixel format " + m.group(3));
+            int tegra_format = Integer.parseInt(m.group(3));
+            switch (tegra_format) {
+            case 1:
+                AndroSSService.screen_depth = 32;
+                AndroSSService.c_offsets[0] = 16;
+                AndroSSService.c_offsets[1] = 8;
+                AndroSSService.c_offsets[2] = 0;
+                AndroSSService.c_offsets[3] = 24;
+
+                for (int color = 0; color < 4; ++color) {
+                    AndroSSService.c_sizes[color] = 8;
+                }
+                break;
+            default:
+                Log.w(TAG, "Service: We don't know what this pixel format is! Taking a guesss...");
+                AndroSSService.screen_depth = 32;
+                AndroSSService.c_offsets[0] = 16;
+                AndroSSService.c_offsets[1] = 8;
+                AndroSSService.c_offsets[2] = 0;
+                AndroSSService.c_offsets[3] = 24;
+
+                for (int color = 0; color < 4; ++color) {
+                    AndroSSService.c_sizes[color] = 8;
+                }
+                break;
+            }
             break;
         }
 
