@@ -267,8 +267,12 @@ public class AndroSSService extends Service implements SensorEventListener {
             break;
         case TEGRA_2:
             param_string = getFBInfoTegra2(AndroSSService.fbread_path);
-            Pattern p = Pattern.compile("(\\d)+x(\\d+)\\s+format\\s+(\\d+)");
+            Pattern p = Pattern.compile(".*size\\s+(\\d+)x(\\d+)\\s+format\\s+(\\d+).*");
             Matcher m = p.matcher(param_string);
+            if (m.matches() == false) {
+                Log.e(TAG, "Service: Could not match from fbread output. Got: " + param_string);
+                return false;
+            }
 
             AndroSSService.screen_width = Integer.parseInt(m.group(1));
             AndroSSService.screen_height = Integer.parseInt(m.group(2));
