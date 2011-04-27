@@ -228,6 +228,8 @@ public class AndroSSService extends Service implements SensorEventListener {
         spe = sp.edit();
 
         String param_string;
+        AndroSSService.c_offsets = new int[4];
+        AndroSSService.c_sizes = new int[4];
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
             // Create the AndroSS external binary.
@@ -258,8 +260,6 @@ public class AndroSSService extends Service implements SensorEventListener {
             AndroSSService.screen_height = Integer.parseInt(params[1]);
             AndroSSService.screen_depth = Integer.parseInt(params[2]);
 
-            AndroSSService.c_offsets = new int[4];
-            AndroSSService.c_sizes = new int[4];
             for (int color = 0; color < 4; ++color) {
                 AndroSSService.c_offsets[color] = Integer.parseInt(params[3 + (color * 2)]);
                 AndroSSService.c_sizes[color] = Integer.parseInt(params[4 + (color * 2)]);
