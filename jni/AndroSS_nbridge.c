@@ -126,7 +126,6 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
             pix_mask <<= 1;
             pix_mask += 1;
         }
-        pix_mask = ~pix_mask;
     }
 
     char cmd[MAX_CMD_LEN] = {0};
