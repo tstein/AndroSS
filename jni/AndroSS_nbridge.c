@@ -13,6 +13,7 @@
 
 static const char * TAG = "AndroSS";
 static const char * envvar = "ANDROSS_FRAMEBUFFER_BYTES";
+static unsigned int pix_mask = 0x00000000;
 
 
 jint JNI_OnLoad(JavaVM * vm, void * reserved) {
@@ -119,6 +120,14 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     (*env)->GetIntArrayRegion(env, offsets_j, 0, 4, offsets);
     (*env)->GetIntArrayRegion(env, sizes_j, 0, 4, sizes);
 
+    // Create the pixel mask, if we need it.
+    if (bpp < 4) {
+        for (int i = 0; i < 8 * bpp; ++i) {
+            pix_mask <<= 1;
+            pix_mask += 1;
+        }
+    }
+
     char cmd[MAX_CMD_LEN] = {0};
     const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
     strncpy(cmd, "su -c    ", 9);
@@ -160,7 +169,12 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 
     unsigned char * curr_pix = pixbuf + pixbuf_offset;
     for (int i = 0; i < pixels; ++i) {
-        unsigned int pix = *((unsigned int *)curr_pix) >> ((4 - bpp) * 8);
+        unsigned int pix;
+        if (bpp == 4) {
+            pix = *((unsigned int *)curr_pix);
+        } else {
+            pix = *((unsigned int *)curr_pix) & pix_mask;
+        }
         *(unsigned int *)(pixbuf + (4 * i)) = formatPixel(pix, offsets, sizes);
         curr_pix += bpp;
     }
