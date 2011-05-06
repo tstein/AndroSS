@@ -133,7 +133,6 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     strncpy(cmd, "su -c    ", 9);
     strncat(cmd, data_dir, MAX_CMD_LEN - 9 - 16);
     strncat(cmd, "/AndroSS", 16);
-    LogD("NBridge: Executing %s", cmd);
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.

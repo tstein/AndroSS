@@ -380,7 +380,7 @@ public class AndroSSService extends Service implements SensorEventListener {
                     String.valueOf(get_pixels_time) +
                     "ms, compression: " +
                     String.valueOf(compress_time) +
-                    ").");
+                    "ms).");
             notifyUser();
         }
 
