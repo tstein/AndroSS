@@ -56,6 +56,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Native function signatures.
+    private static native int testForSu(String bin_location); 
     private static native String getFBInfo(String bin_location);
     private static native int[] getFBPixels(String bin_location,
             int pixels, int bpp,
@@ -147,6 +148,11 @@ public class AndroSSService extends Service implements SensorEventListener {
         } else {
             return "";
         }
+    }
+
+    public static boolean canSu(Context context) {
+        int ret = testForSu(context.getFilesDir().getAbsolutePath());
+        return ret == 0 ? true : false;
     }
 
 

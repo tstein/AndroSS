@@ -13,7 +13,8 @@
 
 
 static const char * TAG = "AndroSS";
-static const char * envvar = "ANDROSS_FRAMEBUFFER_BYTES";
+static const char * MODE_ENVVAR = "ANDROSS_MODE";
+static const char * FB_BYTES_ENVVAR = "ANDROSS_FRAMEBUFFER_BYTES";
 // Define some masks so we don't have to calculate them later.
 const uint32_t masks[32] = {
     0x00000001,
@@ -131,9 +132,28 @@ unsigned int static inline formatPixel(unsigned int in, int * offsets, int * siz
 }
 
 
-jboolean Java_net_tedstein_AndroSS_ConfigurationActivity_testForSu(
-        JNIEnv * env, jobject this) {
-    return !(system("su -c true"));
+jboolean Java_net_tedstein_AndroSS_AndroSSService_testForSu(
+        JNIEnv * env, jobject this,
+        jstring bin_location) {
+    char cmd[MAX_CMD_LEN] = {0};
+    const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
+
+    // Bad things will happen if the binary isn't executable, so let's make sure
+    // it is before we try to use it.
+    strncpy(cmd, "chmod 770 ", 10);
+    strncat(cmd, data_dir, MAX_CMD_LEN - 10 - 16);
+    strncat(cmd, "/AndroSS", 16);
+    LogD("NBridge: Executing %s", cmd);
+    system(cmd);
+
+    // Now change that buffer so we're ready to exec.
+    strncpy(cmd, "su -c    ", 9);
+
+    // Tell the external binary to just return.
+    setenv(MODE_ENVVAR, "TRUE", 1);
+
+    LogD("NBridge: Executing %s", cmd);
+    return(system(cmd));
 }
 
 
@@ -156,8 +176,8 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
     // Now change that buffer so we're ready to exec.
     strncpy(cmd, "su -c    ", 9);
 
-    // Tell the external binary we just want info about the framebuffer.
-    unsetenv(envvar);
+    // Tell the external binary we want info about the framebuffer.
+    setenv(MODE_ENVVAR, "FB_PARAMS", 1);
 
     LogD("NBridge: Executing %s", cmd);
     FILE * from_extbin = popen(cmd, "r");
@@ -195,8 +215,9 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     char bytes_str[MAX_BYTES_DIGITS];
     sprintf(bytes_str, "%u", pixels * bpp);
 
-    // Tell the external binary how many bytes to read from the framebuffer.
-    setenv(envvar, bytes_str, 1);
+    // Tell the external binary to read the framebuffer and how many bytes we want.
+    setenv(MODE_ENVVAR, "FB_DATA", 1);
+    setenv(FB_BYTES_ENVVAR, bytes_str, 1);
 
     // And then slurp the data.
     LogD("NBridge: Executing %s", cmd);

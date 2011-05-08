@@ -1,11 +1,10 @@
 package net.tedstein.AndroSS;
 
 import net.tedstein.AndroSS.AndroSSService.CompressionType;
+import net.tedstein.AndroSS.util.Prefs;
+import net.tedstein.AndroSS.util.RootUtils;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -28,46 +27,6 @@ public class ConfigurationActivity extends Activity {
     }
 
     private static final String TAG = "AndroSS";
-
-    // Native function signatures.
-    private static native boolean testForSu();
-
-    private void showRootTestMessage() {
-        new AlertDialog.Builder(this)
-        .setTitle("Checking for root")
-        .setMessage("AndroSS needs root to work, so let's see if you're " +
-                    "set up properly. This is just a quick test and your su " +
-                    "whitelister may distinguish between this and our normal " +
-                    "operation, so no need to whitelist us right now.")
-        .setNeutralButton("Let's do this!", new OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                boolean have_root = testForSu();
-                if (!have_root) {
-                    showRootTestFailedMessage();
-                }
-
-                final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
-                final SharedPreferences.Editor spe = sp.edit();
-                spe.putBoolean(Prefs.HAVE_TESTED_ROOT_KEY, true);
-                spe.putBoolean(Prefs.HAVE_ROOT_KEY, have_root);
-                spe.commit();
-            }
-        })
-        .show();
-    }
-
-    private void showRootTestFailedMessage() {
-        new AlertDialog.Builder(this)
-        .setTitle("Root test failed")
-        .setMessage("Something went wrong when trying to use su. AndroSS " +
-                    "only works correctly on rooted devices. If you think " +
-                    "this should have worked and you have a few minutes, " +
-                    "feel free to contact me through any method listed in " +
-                    "this app's Market page.")
-        .setNeutralButton("Darn! :(", null)
-        .show();
-    }
 
 
 
@@ -103,7 +62,7 @@ public class ConfigurationActivity extends Activity {
 
         if (sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
             Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
-            showRootTestMessage();
+            RootUtils.showRootTestMessage(c);
         }
 
         CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
@@ -131,7 +90,7 @@ public class ConfigurationActivity extends Activity {
                 if (isChecked) {
                     if (sp.getBoolean(Prefs.HAVE_ROOT_KEY, false) == false) {
                         Log.d(TAG, "Activity: Not setting Enabled to true because we lack root.");
-                        showRootTestFailedMessage();
+                        RootUtils.showRootTestFailedMessage(c);
                         buttonView.setChecked(false);
                     } else {
                         startService(i);

@@ -9,7 +9,7 @@
 static const char * TAG = "AndroSS";
 #include "android.h"
 
-#define PARAM_BUFFER_SIZE 32
+#define STRING_BUFFER_SIZE 128
 #define FD_STDOUT 1
 
 
@@ -17,22 +17,26 @@ static const char * TAG = "AndroSS";
  * I've tried to pack all necessary functionality into this program without the
  * need of arguments so AndroSS only has to be su whitelisted once. Therefore,
  * this program's behavior is determined by the value of the envvar
- * ANDROSS_FRAMEBUFFER_BYTES.
- *      If this is not defined (or an empty string), this binary will query the
- *      framebuffer for the following information, printing it in decimal in
- *      this order, separated by spaces:
- *      horizontal resolution
- *      vertical resolution
- *      pixel depth
- *      red offset (for extracting each color from each pixel)
- *      red length
- *      green offset
- *      green length
- *      blue offset
- *      blue length
- *      alpha offset
- *      alpha length
+ * ANDROSS_MODE.
+ *      case (TRUE):
+ *      return 0. (Useful for su tests and initial whitelisting.)
  *
+ *      case (FB_PARAMS):
+ *      This binary will query the framebuffer for the following information,
+ *      printing it in decimal in this order, separated by spaces:
+ *          horizontal resolution
+ *          vertical resolution
+ *          pixel depth
+ *          red offset
+ *          red length
+ *          green offset
+ *          green length
+ *          blue offset
+ *          blue length
+ *          alpha offset
+ *          alpha length
+ *
+ *      case (FB_DATA):
  *      If this has a value, this binary will interpret it as the number of
  *      bytes it should read from the framebuffer and write out.
  */
@@ -47,7 +51,7 @@ int writeFBParams(int output_fd, int fb_fd)
         return(1);
     }
 
-    char output_data[PARAM_BUFFER_SIZE] = {0};
+    char output_data[STRING_BUFFER_SIZE] = {0};
     sprintf(output_data, "%u %u %u %u %u %u %u %u %u %u %u",
             fb_varinfo.xres,
             fb_varinfo.yres,
@@ -61,7 +65,7 @@ int writeFBParams(int output_fd, int fb_fd)
             fb_varinfo.transp.offset,
             fb_varinfo.transp.length);
 
-    write(output_fd, output_data, PARAM_BUFFER_SIZE * sizeof(char));
+    write(output_fd, output_data, STRING_BUFFER_SIZE * sizeof(char));
     return(0);
 }
 
@@ -98,17 +102,30 @@ int main(int argc, const char * argv[])
         return(1);
     }
 
-    const char * fb_bytes_str = getenv("ANDROSS_FRAMEBUFFER_BYTES");
-    int ret;
-    if (fb_bytes_str == NULL || strlen(fb_bytes_str) == 0) {
-        LogD("External: Running in Param mode.");
-        ret = writeFBParams(FD_STDOUT, fb_fd);
-    } else {
-        LogD("External: Running in Data mode.");
-        int fb_bytes = atoi(fb_bytes_str);
-        ret = writeFBData(FD_STDOUT, fb_fd, fb_bytes);
+    const char * mode_str = getenv("ANDROSS_MODE");
+    if (mode_str == NULL) {
+        LogE("External: ANDROSS_MODE was not set!");
+        return 127;
     }
 
+    int ret;
+    if (strcmp(mode_str, "TRUE") == 0) {
+        LogD("External: Running in True mode.");
+        ret = 0;
+    } else if (strcmp(mode_str, "FB_PARAMS") == 0) {
+        LogD("External: Running in Param mode.");
+        ret = writeFBParams(FD_STDOUT, fb_fd);
+    } else if (strcmp(mode_str, "FB_DATA") == 0) {
+        LogD("External: Running in Data mode.");
+        const char * fb_bytes_str = getenv("ANDROSS_FRAMEBUFFER_BYTES");
+        int fb_bytes = atoi(fb_bytes_str);
+        ret = writeFBData(FD_STDOUT, fb_fd, fb_bytes);
+    } else {
+        char errmsg[STRING_BUFFER_SIZE] = {0};
+        strcpy(errmsg, "External: Invalid ANDROSS_MODE: ");
+        strncat(errmsg, mode_str, STRING_BUFFER_SIZE - 32 - 1);
+        ret = 127;
+    }
     return ret;
 }
 
