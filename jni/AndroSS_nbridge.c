@@ -2,10 +2,11 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <jni.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <android.h>
+#include "android.h"
 #define MAX_INFO_BYTES 128
 #define MAX_CMD_LEN 256
 #define MAX_BYTES_DIGITS 16
@@ -13,7 +14,40 @@
 
 static const char * TAG = "AndroSS";
 static const char * envvar = "ANDROSS_FRAMEBUFFER_BYTES";
-static unsigned int pix_mask = 0x00000000;
+// Define some masks so we don't have to calculate them later.
+const uint32_t masks[32] = {
+    0x00000001,
+    0x00000003,
+    0x00000007,
+    0x0000000f,
+    0x0000001f,
+    0x0000003f,
+    0x0000007f,
+    0x000000ff,
+    0x000001ff,
+    0x000003ff,
+    0x000007ff,
+    0x00000fff,
+    0x00001fff,
+    0x00003fff,
+    0x00007fff,
+    0x0000ffff,
+    0x0001ffff,
+    0x0003ffff,
+    0x0007ffff,
+    0x000fffff,
+    0x001fffff,
+    0x003fffff,
+    0x007fffff,
+    0x00ffffff,
+    0x01ffffff,
+    0x03ffffff,
+    0x07ffffff,
+    0x0fffffff,
+    0x1fffffff,
+    0x3fffffff,
+    0x7fffffff,
+    0xffffffff };
 
 
 jint JNI_OnLoad(JavaVM * vm, void * reserved) {
@@ -23,6 +57,38 @@ jint JNI_OnLoad(JavaVM * vm, void * reserved) {
     } else {
         return JNI_VERSION_1_6;
     }
+}
+
+
+/**
+ * @param pixels - A pointer to the memory with all the pixels.
+ * @param index - The desired pixel, indexed from 0.
+ * @param size - The size of a pixel, in bytes.
+ */
+uint32_t static inline extractPixel(uint8_t * pixels, uint32_t index, uint8_t size) {
+    // pix_ptr points to the low byte of the pixel and is not necessarily
+    // aligned.
+    uint8_t * pix_ptr = pixels + (index * size);
+    uint8_t misalignment = (uint32_t)pix_ptr % 4;
+
+    // Given that pixels are no more than four bytes, each pixel will have some
+    // data in the 32-bit word at this address and may overflow to the next.
+    uint32_t * lower_word_ptr = (uint32_t *)(pix_ptr - misalignment);
+    uint8_t overflow = misalignment + size <= 4 ? 0 : (misalignment + size) % 4;
+
+    uint32_t ret = *lower_word_ptr;
+    ret &= masks[(misalignment + size - overflow) * 8 - 1];
+    ret >>= misalignment * 8;
+
+    if (overflow > 0) {
+        // There are relevant bits in the next word. Mask them out and add them
+        // to ret.
+        uint32_t top = *(lower_word_ptr + 1);
+        top &= masks[overflow * 8 - 1];
+        ret += top;
+    }
+
+    return ret;
 }
 
 
@@ -41,11 +107,7 @@ unsigned int static inline formatPixel(unsigned int in, int * offsets, int * siz
 
     for (int color = 0; color < 4; ++color) {
         // Build the mask by repeatedly shifting and incrementing.
-        mask = 0;
-        for (int bits = 0; bits < sizes[color]; ++bits) {
-            mask <<= 1;
-            ++mask;
-        }
+        mask = masks[sizes[color] - 1];
 
         // Extract the desired bits from in, then shift them up if we have
         // less than a full byte of information.
@@ -120,14 +182,6 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     (*env)->GetIntArrayRegion(env, offsets_j, 0, 4, offsets);
     (*env)->GetIntArrayRegion(env, sizes_j, 0, 4, sizes);
 
-    // Create the pixel mask, if we need it.
-    if (bpp < 4) {
-        for (int i = 0; i < 8 * bpp; ++i) {
-            pix_mask <<= 1;
-            pix_mask += 1;
-        }
-    }
-
     char cmd[MAX_CMD_LEN] = {0};
     const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
     strncpy(cmd, "su -c    ", 9);
@@ -166,16 +220,10 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     struct timeval start_tv, end_tv;
     gettimeofday(&start_tv, NULL);
 
-    unsigned char * curr_pix = pixbuf + pixbuf_offset;
+    unsigned char * unformatted_pixels = pixbuf + pixbuf_offset;
     for (int i = 0; i < pixels; ++i) {
-        unsigned int pix;
-        if (bpp == 4) {
-            pix = *((unsigned int *)curr_pix);
-        } else {
-            pix = *((unsigned int *)curr_pix) & pix_mask;
-        }
+        uint32_t pix = extractPixel(unformatted_pixels, i, bpp);
         *(unsigned int *)(pixbuf + (4 * i)) = formatPixel(pix, offsets, sizes);
-        curr_pix += bpp;
     }
 
     gettimeofday(&end_tv, NULL);
