@@ -86,6 +86,7 @@ uint32_t static inline extractPixel(uint8_t * pixels, uint32_t index, uint8_t si
         // to ret.
         uint32_t top = *(lower_word_ptr + 1);
         top &= masks[overflow * 8 - 1];
+        top << (size - overflow) * 8;
         ret += top;
     }
 
