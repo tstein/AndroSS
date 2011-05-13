@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Calendar;
 
+import net.tedstein.AndroSS.util.Prefs;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.ContentValues;
