@@ -33,6 +33,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static enum CompressionType {PNG, JPG_HQ, JPG_FAST};
 
     private static final String TAG = "AndroSS";
+    private static final String DEFAULT_OUTPUT_DIR = "/sdcard/screenshots";
     private static final float ACCEL_THRESH = 7.0F;
     private static final long IGNORE_SHAKE_INTERVAL = 1000 * 1000 * 1000;
     private static SensorManager sm;
@@ -43,10 +44,9 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static int[] c_offsets;
     public static int[] c_sizes;
     public static String files_dir;
-    // Configuration.
-    public static String output_dir = "/sdcard/screenshots/";
     // Service state.
     private static boolean initialized = false;
+    private static String output_dir = "/sdcard/screenshots/";
     private static long last_shake_event = 0;
     private static float old_x = 0;
     private static float old_y = 0;
@@ -139,8 +139,20 @@ public class AndroSSService extends Service implements SensorEventListener {
         return AndroSSService.output_dir;
     }
 
-    public static void setOutputDir(String new_dir) {
-        AndroSSService.output_dir = new_dir;
+    public static boolean setOutputDir(String new_dir) {
+        if (!new_dir.endsWith("/")) {
+            new_dir += "/";
+        }
+
+        File f = new File(new_dir + "test");
+        if (f.canWrite()) {
+            AndroSSService.output_dir = new_dir;
+            Log.d(TAG, "Service: Updated output dir to: " + new_dir);
+            return true;
+        } else {
+            Log.d(TAG, "Service: Cannot write to requested output dir: " + new_dir);
+            return false;
+        }
     }
 
     public static String getParamString() {
@@ -206,6 +218,10 @@ public class AndroSSService extends Service implements SensorEventListener {
         // Set up SharedPreferences.
         sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
         spe = sp.edit();
+
+        // Configure the output directory.
+        AndroSSService.setOutputDir(
+                sp.getString(Prefs.OUTPUT_DIR_KEY, AndroSSService.DEFAULT_OUTPUT_DIR));
 
         // Create the AndroSS external binary.
         // TODO: This would be a great time to chmod +x it, but will that stick?
