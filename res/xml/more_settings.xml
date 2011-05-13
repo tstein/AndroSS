@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+  <PreferenceCategory
+    android:title="@string/more_settings_menu">
+    <EditTextPreference
+      android:key="screenshot_dir"
+      android:title="@string/screenshot_dir_text"
+      android:summary=""
+      android:dialogTitle="@string/screenshot_dir_prompt"/>
+    <Preference
+      android:key="retry_root_check"
+      android:title="@string/retry_root_check"/>
+    <Preference
+      android:key="debug_info"
+      android:title="@string/goto_debug_prompt"/>
+  </PreferenceCategory>
+</PreferenceScreen>
