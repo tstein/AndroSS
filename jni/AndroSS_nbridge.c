@@ -133,9 +133,10 @@ uint32_t static inline formatPixel(uint32_t in, int * offsets, int * sizes) {
 }
 
 
-jboolean Java_net_tedstein_AndroSS_AndroSSService_testForSu(
+jint Java_net_tedstein_AndroSS_AndroSSService_testForSu(
         JNIEnv * env, jobject this,
         jstring bin_location) {
+    LogD("NBridge: Testing for su.");
     char cmd[MAX_CMD_LEN] = {0};
     const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
 
@@ -154,7 +155,9 @@ jboolean Java_net_tedstein_AndroSS_AndroSSService_testForSu(
     setenv(MODE_ENVVAR, "TRUE", 1);
 
     LogD("NBridge: Executing %s", cmd);
-    return(system(cmd));
+    int ret = system(cmd);
+    LogD("NBridge: system() returned %d.", ret);
+    return ret;
 }
 
 
