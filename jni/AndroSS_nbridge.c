@@ -103,9 +103,9 @@ uint32_t static inline extractPixel(uint8_t * pixels, uint32_t index, uint8_t si
  * [b, g, r, a].
  * @return The input pixel formatted as an ARGB_8888 int.
  */
-unsigned int static inline formatPixel(unsigned int in, int * offsets, int * sizes) {
-    unsigned char out[4];
-    unsigned int mask;
+uint32_t static inline formatPixel(uint32_t in, int * offsets, int * sizes) {
+    uint8_t out[4];
+    uint32_t mask;
 
     for (int color = 0; color < 4; ++color) {
         // Build the mask by repeatedly shifting and incrementing.
@@ -124,7 +124,7 @@ unsigned int static inline formatPixel(unsigned int in, int * offsets, int * siz
     }
 
     // Finally, combine the components, and that's a pixel.
-    unsigned int ret = 0;
+    uint32_t ret = 0;
     for (int color = 3; color >= 0; --color) {
         ret <<= 8;
         ret |= out[color];
@@ -211,7 +211,7 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
-    unsigned char * pixbuf = malloc(pixels * 4);
+    uint8_t * pixbuf = malloc(pixels * 4);
     int pixbuf_offset = (pixels * 4) - (pixels * bpp);
     char bytes_str[MAX_BYTES_DIGITS];
     sprintf(bytes_str, "%u", pixels * bpp);
@@ -242,10 +242,10 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     struct timeval start_tv, end_tv;
     gettimeofday(&start_tv, NULL);
 
-    unsigned char * unformatted_pixels = pixbuf + pixbuf_offset;
+    uint8_t * unformatted_pixels = pixbuf + pixbuf_offset;
     for (int i = 0; i < pixels; ++i) {
         uint32_t pix = extractPixel(unformatted_pixels, i, bpp);
-        *(unsigned int *)(pixbuf + (4 * i)) = formatPixel(pix, offsets, sizes);
+        *(((uint32_t *)pixbuf) + i) = formatPixel(pix, offsets, sizes);
     }
 
     gettimeofday(&end_tv, NULL);
