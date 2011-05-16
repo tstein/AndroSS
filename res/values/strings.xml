@@ -20,6 +20,21 @@
   <string name="camera_button_trigger_text">hardware camera button?</string>
   <string name="shake_trigger_text">shake?</string>
 
+  <string name="root_test_message_title">Checking for root</string>
+  <string name="root_test_message">
+               AndroSS needs root to work, so let\'s see if you\'re set up properly. This is just a
+               simple test, but if you whitelist us now, your su program probably won\'t bother you
+               again.</string>
+  <string name="root_test_message_neutral">Let\'s do this!</string>
+
+  <string name="root_test_failed_message_title">Root test failed</string>
+  <string name="root_test_failed_message">
+               Something went wrong when trying to use su. AndroSS needs root to work correctly on
+               your device. You can retry this check at any time from (More) Settings in the menu.
+               \n\nIf you think this should have worked and you have a few minutes, please contact
+               me through any method listed in this app\'s Market page.</string>
+  <string name="root_test_failed_message_neutral">Darn! :(</string>
+
   <string name="more_settings_menu">(More) Settings</string>
   <string name="screenshot_dir_text">Save screenshots to:</string>
   <string name="screenshot_dir_prompt">Save to:</string>

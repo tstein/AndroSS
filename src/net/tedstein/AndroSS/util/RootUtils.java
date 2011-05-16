@@ -1,6 +1,7 @@
 package net.tedstein.AndroSS.util;
 
 import net.tedstein.AndroSS.AndroSSService;
+import net.tedstein.AndroSS.R;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,12 +12,10 @@ public class RootUtils {
     public static void showRootTestMessage(Context c) {
         final Context context = c;
         new AlertDialog.Builder(context)
-        .setTitle("Checking for root")
-        .setMessage("AndroSS needs root to work, so let's see if you're " +
-                    "set up properly. This is just a quick test and your su " +
-                    "whitelister may distinguish between this and our normal " +
-                    "operation, so no need to whitelist us right now.")
-        .setNeutralButton("Let's do this!", new OnClickListener() {
+        .setTitle(context.getString(R.string.root_test_message_title))
+        .setMessage(context.getString(R.string.root_test_message))
+        .setNeutralButton(context.getString(R.string.root_test_message_neutral),
+                new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 boolean have_root = AndroSSService.canSu(context);
@@ -37,13 +36,9 @@ public class RootUtils {
 
     public static void showRootTestFailedMessage(Context context) {
         new AlertDialog.Builder(context)
-        .setTitle("Root test failed")
-        .setMessage("Something went wrong when trying to use su. AndroSS " +
-                    "only works correctly on rooted devices. If you think " +
-                    "this should have worked and you have a few minutes, " +
-                    "feel free to contact me through any method listed in " +
-                    "this app's Market page.")
-        .setNeutralButton("Darn! :(", null)
+        .setTitle(context.getString(R.string.root_test_failed_message_title))
+        .setMessage(context.getString(R.string.root_test_failed_message))
+        .setNeutralButton(context.getString(R.string.root_test_failed_message_neutral), null)
         .show();
     }
 }
