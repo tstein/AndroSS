@@ -66,7 +66,7 @@ jint JNI_OnLoad(JavaVM * vm, void * reserved) {
  * @param index - The desired pixel, indexed from 0.
  * @param size - The size of a pixel, in bytes.
  */
-uint32_t static inline extractPixel(uint8_t * pixels, uint32_t index, uint8_t size) {
+static inline uint32_t extractPixel(uint8_t * pixels, uint32_t index, uint8_t size) {
     // pix_ptr points to the low byte of the pixel and is not necessarily
     // aligned.
     uint8_t * pix_ptr = pixels + (index * size);
@@ -86,7 +86,7 @@ uint32_t static inline extractPixel(uint8_t * pixels, uint32_t index, uint8_t si
         // to ret.
         uint32_t top = *(lower_word_ptr + 1);
         top &= masks[overflow * 8 - 1];
-        top << (size - overflow) * 8;
+        top <<= (size - overflow) * 8;
         ret += top;
     }
 
@@ -103,7 +103,7 @@ uint32_t static inline extractPixel(uint8_t * pixels, uint32_t index, uint8_t si
  * [b, g, r, a].
  * @return The input pixel formatted as an ARGB_8888 int.
  */
-uint32_t static inline formatPixel(uint32_t in, int * offsets, int * sizes) {
+static inline uint32_t formatPixel(uint32_t in, int * offsets, int * sizes) {
     uint8_t out[4];
     uint32_t mask;
 
@@ -189,6 +189,7 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
     if (ferror(from_extbin)) {
         LogE("Nbridge: Error reading from subprocess!");
     } else {
+        LogD("NBridge: Read %d bytes from subprocess.", bytes_read);
         ret = (*env)->NewStringUTF(env, strbuf);
     }
     pclose(from_extbin);
@@ -226,7 +227,7 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     // And then slurp the data.
     LogD("NBridge: Executing %s", cmd);
     FILE * from_extbin = popen(cmd, "r");
-    int chunks_read = fread(pixbuf + pixbuf_offset, pixels * bpp, 1, from_extbin);
+    fread(pixbuf + pixbuf_offset, pixels * bpp, 1, from_extbin);
     if (ferror(from_extbin) && !(feof(from_extbin))) {
         LogE("NBridge: Error reading framebuffer data from subprocess!");
         return 0;

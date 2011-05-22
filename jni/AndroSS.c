@@ -81,7 +81,7 @@ int writeFBData(int output_fd, int fb_fd, int fb_bytes)
 
     int bytes_written = write(output_fd, bytes, fb_bytes);
     if (bytes_written < fb_bytes) {
-        LogE("External: Only wrote %d bytes!");
+        LogE("External: Only wrote %d bytes!", bytes_written);
         return 1;
     }
     LogD("External: wrote %u bytes.", bytes_written);
@@ -89,7 +89,7 @@ int writeFBData(int output_fd, int fb_fd, int fb_bytes)
     return 0;
 }
 
-int main(int argc, const char * argv[])
+int main()
 {
     // Find and open the correct framebuffer device.
 #ifdef ANDROID
