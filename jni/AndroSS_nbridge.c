@@ -330,12 +330,14 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsTegra2(
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
-    unsigned char * pixbuf = malloc((pixels * 4) + skip_bytes);
+    unsigned char * pixbuf = malloc((pixels * 4));
     int pixbuf_offset = (pixels * 4) - (pixels * bpp);
 
     // And then slurp the data.
     LogD("NBridge: Executing %s", cmd);
     FILE * from_extbin = popen(cmd, "r");
+    // Drop the garbage into pixbuf, then clobber it with the real data.
+    fread(pixbuf + pixbuf_offset, skip_bytes, 1, from_extbin);
     fread(pixbuf + pixbuf_offset, pixels * bpp, 1, from_extbin);
     if (ferror(from_extbin) && !(feof(from_extbin))) {
         LogE("NBridge: Error reading framebuffer data from subprocess!");
