@@ -3,6 +3,8 @@ package net.tedstein.AndroSS;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.tedstein.AndroSS.util.Prefs;
 import android.app.Service;
@@ -44,6 +46,10 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static int[] c_offsets;
     public static int[] c_sizes;
     public static String files_dir;
+    public static enum DeviceType { UNKNOWN, GENERIC, TEGRA_2 };
+    private static DeviceType dev_type = DeviceType.UNKNOWN;
+    // Static info about Tegra 2 devices.
+    private static final String fbread_path = "/system/bin/fbread";
     // Service state.
     private static boolean initialized = false;
     private static String output_dir = "/sdcard/screenshots/";
@@ -58,8 +64,13 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     // Native function signatures.
     private static native int testForSu(String bin_location); 
-    private static native String getFBInfo(String bin_location);
-    private static native int[] getFBPixels(String bin_location,
+    public static native boolean testForTegra2();
+    private static native String getFBInfoGeneric(String bin_location);
+    private static native int[] getFBPixelsGeneric(String bin_location,
+            int pixels, int bpp,
+            int[] offsets, int[] sizes);
+    private static native String getFBInfoTegra2(String bin_location);
+    private static native int[] getFBPixelsTegra2(String bin_location,
             int pixels, int bpp,
             int[] offsets, int[] sizes);
 
@@ -157,7 +168,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     public static String getParamString() {
         if (AndroSSService.initialized) {
-            return getFBInfo(AndroSSService.files_dir);
+            return getFBInfoGeneric(AndroSSService.files_dir);
         } else {
             return "";
         }
@@ -167,6 +178,21 @@ public class AndroSSService extends Service implements SensorEventListener {
         createExternalBinary(context);
         int ret = testForSu(context.getFilesDir().getAbsolutePath());
         return ret == 0 ? true : false;
+    }
+
+    public static DeviceType getDeviceType() {
+        if (AndroSSService.dev_type == DeviceType.UNKNOWN) {
+            Log.d(TAG, "Service: Don't know what kind of device we're on...");
+            if (AndroSSService.testForTegra2()) {
+                Log.d(TAG, "Service: This is a Tegra 2-based device.");
+                AndroSSService.dev_type = DeviceType.TEGRA_2;
+            } else {
+                Log.d(TAG, "Service: This is a regular device.");
+                AndroSSService.dev_type = DeviceType.GENERIC;
+            }
+        }
+
+        return AndroSSService.dev_type;
     }
 
 
@@ -213,8 +239,8 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     // State control functions.
     private boolean init() {
-        // TODO: Some kind of locking would be more correct, though I'm not sure
-        // I see anything that can go wrong other than some wasted cycles.
+        // Some kind of locking would be more correct, though I'm not sure I see anything that can
+        // go wrong other than some wasted cycles.
 
         // Set up SharedPreferences.
         sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
@@ -225,31 +251,84 @@ public class AndroSSService extends Service implements SensorEventListener {
                 sp.getString(Prefs.OUTPUT_DIR_KEY, AndroSSService.DEFAULT_OUTPUT_DIR));
 
         AndroSSService.createExternalBinary(this);
-
-        // Get screen info.
-        AndroSSService.files_dir = getFilesDir().getAbsolutePath();
-        String param_string = getFBInfo(AndroSSService.files_dir);
-        if (param_string.equals("")) {
-            Log.e(TAG,"Service: Got empty param string from native!");
-            Toast.makeText(this,
-                    getString(R.string.empty_param_error),
-                    Toast.LENGTH_LONG)
-            .show();
-            return false;
-        }
-
-        Log.d(TAG, "Service: Got framebuffer params: " + param_string);
-        String[] params = param_string.split(" ");
-
-        AndroSSService.screen_width = Integer.parseInt(params[0]);
-        AndroSSService.screen_height = Integer.parseInt(params[1]);
-        AndroSSService.screen_depth = Integer.parseInt(params[2]);
-
+        String param_string;
         AndroSSService.c_offsets = new int[4];
         AndroSSService.c_sizes = new int[4];
-        for (int color = 0; color < 4; ++color) {
-            AndroSSService.c_offsets[color] = Integer.parseInt(params[3 + (color * 2)]);
-            AndroSSService.c_sizes[color] = Integer.parseInt(params[4 + (color * 2)]);
+        switch (AndroSSService.getDeviceType()) {
+        case GENERIC:
+            // Create the AndroSS external binary.
+            try {
+                FileOutputStream myfile = openFileOutput("AndroSS", MODE_PRIVATE);
+                myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
+                myfile.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // Get screen info.
+            AndroSSService.files_dir = getFilesDir().getAbsolutePath();
+            param_string = getFBInfoGeneric(AndroSSService.files_dir);
+            if (param_string.equals("")) {
+                Log.e(TAG,"Service: Got empty param string from native!");
+                Toast.makeText(this,
+                        getString(R.string.empty_param_error),
+                        Toast.LENGTH_LONG)
+                        .show();
+                return false;
+            }
+
+            Log.d(TAG, "Service: Got framebuffer params: " + param_string);
+            String[] params = param_string.split(" ");
+
+            AndroSSService.screen_width = Integer.parseInt(params[0]);
+            AndroSSService.screen_height = Integer.parseInt(params[1]);
+            AndroSSService.screen_depth = Integer.parseInt(params[2]);
+
+            for (int color = 0; color < 4; ++color) {
+                AndroSSService.c_offsets[color] = Integer.parseInt(params[3 + (color * 2)]);
+                AndroSSService.c_sizes[color] = Integer.parseInt(params[4 + (color * 2)]);
+            }
+            break;
+        case TEGRA_2:
+            param_string = getFBInfoTegra2(AndroSSService.fbread_path);
+            Pattern p = Pattern.compile(".*size\\s+(\\d+)x(\\d+)\\s+format\\s+(\\d+).*");
+            Matcher m = p.matcher(param_string);
+            if (m.matches() == false) {
+                Log.e(TAG, "Service: Could not match from fbread output. Got: " + param_string);
+                return false;
+            }
+
+            AndroSSService.screen_width = Integer.parseInt(m.group(1));
+            AndroSSService.screen_height = Integer.parseInt(m.group(2));
+
+            Log.d(TAG, "Service: Got pixel format " + m.group(3));
+            int tegra_format = Integer.parseInt(m.group(3));
+            switch (tegra_format) {
+            case 1:
+                AndroSSService.screen_depth = 32;
+                AndroSSService.c_offsets[0] = 16;
+                AndroSSService.c_offsets[1] = 8;
+                AndroSSService.c_offsets[2] = 0;
+                AndroSSService.c_offsets[3] = 24;
+
+                for (int color = 0; color < 4; ++color) {
+                    AndroSSService.c_sizes[color] = 8;
+                }
+                break;
+            default:
+                Log.w(TAG, "Service: We don't know what this pixel format is! Taking a guesss...");
+                AndroSSService.screen_depth = 32;
+                AndroSSService.c_offsets[0] = 16;
+                AndroSSService.c_offsets[1] = 8;
+                AndroSSService.c_offsets[2] = 0;
+                AndroSSService.c_offsets[3] = 24;
+
+                for (int color = 0; color < 4; ++color) {
+                    AndroSSService.c_sizes[color] = 8;
+                }
+                break;
+            }
+            break;
         }
 
         AndroSSService.sm = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -367,9 +446,19 @@ public class AndroSSService extends Service implements SensorEventListener {
         int bpp = AndroSSService.screen_depth / 8;
 
         // First order of business is to get the pixels.
-        int[] pixels = getFBPixels(AndroSSService.files_dir,
-                screen_width * screen_height, bpp,
-                c_offsets, c_sizes);
+        int[] pixels = {0};
+        switch (AndroSSService.getDeviceType()) {
+        case GENERIC:
+            pixels = getFBPixelsGeneric(AndroSSService.files_dir,
+                    screen_width * screen_height, bpp,
+                    c_offsets, c_sizes);
+            break;
+        case TEGRA_2:
+            pixels = getFBPixelsTegra2(fbread_path,
+                    screen_width * screen_height, bpp,
+                    c_offsets, c_sizes);
+            break;
+        }
         long get_pixels_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
 
         Log.d(TAG, "Service: Creating bitmap.");
