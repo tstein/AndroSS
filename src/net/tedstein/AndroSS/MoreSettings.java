@@ -1,5 +1,6 @@
 package net.tedstein.AndroSS;
 
+import net.tedstein.AndroSS.AndroSSService.DeviceType;
 import net.tedstein.AndroSS.util.RootUtils;
 import android.content.Context;
 import android.content.Intent;
@@ -27,6 +28,9 @@ public class MoreSettings extends PreferenceActivity {
         final Context context = this;
 
         Preference retry_root_check = mPreferenceManager.findPreference("retry_root_check");
+        if (AndroSSService.getDeviceType() != DeviceType.GENERIC) {
+            retry_root_check.setEnabled(false);
+        }
         retry_root_check.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
