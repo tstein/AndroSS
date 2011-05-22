@@ -1,6 +1,7 @@
 package net.tedstein.AndroSS;
 
 import net.tedstein.AndroSS.AndroSSService.CompressionType;
+import net.tedstein.AndroSS.AndroSSService.DeviceType;
 import net.tedstein.AndroSS.util.Prefs;
 import net.tedstein.AndroSS.util.RootUtils;
 import android.app.Activity;
@@ -27,6 +28,7 @@ public class ConfigurationActivity extends Activity {
     }
 
     private static final String TAG = "AndroSS";
+    private DeviceType mDeviceType = DeviceType.UNKNOWN;
 
 
 
@@ -57,10 +59,12 @@ public class ConfigurationActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.config);
 
+        mDeviceType = AndroSSService.getDeviceType();
         final Context c = this;
         final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
 
-        if (sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
+        if (mDeviceType == DeviceType.GENERIC &&
+                sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
             Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
             RootUtils.showRootTestMessage(c);
         }
@@ -88,7 +92,8 @@ public class ConfigurationActivity extends Activity {
 
                 Intent i = new Intent(c, AndroSSService.class);
                 if (isChecked) {
-                    if (sp.getBoolean(Prefs.HAVE_ROOT_KEY, false) == false) {
+                    if (mDeviceType == DeviceType.GENERIC &&
+                            sp.getBoolean(Prefs.HAVE_ROOT_KEY, false) == false) {
                         Log.d(TAG, "Activity: Not setting Enabled to true because we lack root.");
                         RootUtils.showRootTestFailedMessage(c);
                         buttonView.setChecked(false);
