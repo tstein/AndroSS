@@ -164,6 +164,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     }
 
     public static boolean canSu(Context context) {
+        createExternalBinary(context);
         int ret = testForSu(context.getFilesDir().getAbsolutePath());
         return ret == 0 ? true : false;
     }
@@ -223,15 +224,7 @@ public class AndroSSService extends Service implements SensorEventListener {
         AndroSSService.setOutputDir(
                 sp.getString(Prefs.OUTPUT_DIR_KEY, AndroSSService.DEFAULT_OUTPUT_DIR));
 
-        // Create the AndroSS external binary.
-        // TODO: This would be a great time to chmod +x it, but will that stick?
-        try {
-            FileOutputStream myfile = openFileOutput("AndroSS", MODE_PRIVATE);
-            myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
-            myfile.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        AndroSSService.createExternalBinary(this);
 
         // Get screen info.
         AndroSSService.files_dir = getFilesDir().getAbsolutePath();
@@ -270,6 +263,17 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Actual screen-shooting functionality.
+    private static void createExternalBinary(Context context) {
+        try {
+            FileOutputStream myfile = context.openFileOutput("AndroSS", MODE_PRIVATE);
+            myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
+            myfile.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private String calToStr(Calendar c) {
         String ret = "";
         ret += String.format("%04d-", c.get(Calendar.YEAR));
