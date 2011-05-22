@@ -78,8 +78,8 @@ static inline uint32_t extractPixel(uint8_t * pixels, uint32_t index, uint8_t si
     uint8_t overflow = misalignment + size <= 4 ? 0 : (misalignment + size) % 4;
 
     uint32_t ret = *lower_word_ptr;
-    ret &= masks[(misalignment + size - overflow) * 8 - 1];
     ret >>= misalignment * 8;
+    ret &= masks[(size - overflow) * 8 - 1];
 
     if (overflow > 0) {
         // There are relevant bits in the next word. Mask them out and add them
