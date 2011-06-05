@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/ll_debug_info_tegra"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:orientation="vertical">
+  <TextView android:id="@+id/tv_framebuffer_tegra"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="7dip"
+    android:paddingBottom="15dip"
+    android:textSize="20dip"
+    android:text="@string/framebuffer_info"/>
+  <TextView android:id="@+id/tv_framebuffer_string_tegra"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="7dip"
+    android:textSize="16dip"
+    android:text=""/>
+</LinearLayout>
