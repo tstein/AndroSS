@@ -155,9 +155,11 @@ public class AndroSSService extends Service implements SensorEventListener {
             new_dir += "/";
         }
 
-        File f = new File(new_dir + "test");
+        File f = new File(new_dir);
+        f.mkdirs();
         if (f.canWrite()) {
             AndroSSService.output_dir = new_dir;
+            spe.putString(Prefs.OUTPUT_DIR_KEY, new_dir);
             Log.d(TAG, "Service: Updated output dir to: " + new_dir);
             return true;
         } else {
@@ -368,7 +370,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     private boolean writeScreenshot(Bitmap bmp, String filename) {
         boolean success = false;
 
-        File output = new File(AndroSSService.output_dir + filename);
+        File output = new File(AndroSSService.getOutputDir() + filename);
         try {
             // A little wasteful, maybe, but this avoids errors due to the
             // output dir not existing.
@@ -485,11 +487,14 @@ public class AndroSSService extends Service implements SensorEventListener {
         boolean success = writeScreenshot(bmp_ss, filename);
         long compress_time = Calendar.getInstance().getTimeInMillis() - compress_start_time.getTimeInMillis();
 
-        Log.d(TAG, "Service: Wrote to " + filename + ": " + (success ? "success" : "failure"));
+        Log.d(TAG,
+                "Service: Write to " + AndroSSService.getOutputDir() + filename + ": "
+                + (success ? "succeeded" : "failed"));
         if (success) {
             long total_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
 
-            registerNewScreenshot(AndroSSService.output_dir + filename, start_time.getTimeInMillis());
+            registerNewScreenshot(AndroSSService.getOutputDir() + filename,
+                    start_time.getTimeInMillis());
             Log.d(TAG, "Service: Screenshot taken in " +
                     String.valueOf(total_time) +
                     "ms (latency: " +
