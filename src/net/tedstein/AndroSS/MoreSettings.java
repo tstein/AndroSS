@@ -40,7 +40,7 @@ public class MoreSettings extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 String new_output_dir = (String)newValue;
-                if (AndroSSService.setOutputDir(new_output_dir)) {
+                if (AndroSSService.setOutputDir(context, new_output_dir)) {
                     screenshot_dir.setSummary(AndroSSService.getOutputDir());
                     return true;
                 } else {

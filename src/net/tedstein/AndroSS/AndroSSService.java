@@ -144,13 +144,14 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     public static void setCompressionType(CompressionType ct) {
         spe.putString(Prefs.COMPRESSION_KEY, ct.name());
+        spe.commit();
     }
 
     public static String getOutputDir() {
         return AndroSSService.output_dir;
     }
 
-    public static boolean setOutputDir(String new_dir) {
+    public static boolean setOutputDir(Context context, String new_dir) {
         if (!new_dir.endsWith("/")) {
             new_dir += "/";
         }
@@ -158,8 +159,11 @@ public class AndroSSService extends Service implements SensorEventListener {
         File f = new File(new_dir);
         f.mkdirs();
         if (f.canWrite()) {
-            AndroSSService.output_dir = new_dir;
+            initSharedPreferences(context);
             spe.putString(Prefs.OUTPUT_DIR_KEY, new_dir);
+            spe.commit();
+
+            AndroSSService.output_dir = new_dir;
             Log.d(TAG, "Service: Updated output dir to: " + new_dir);
             return true;
         } else {
@@ -240,16 +244,24 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // State control functions.
+    private static void initSharedPreferences(Context context) {
+        if (sp == null || spe == null) {
+            sp = context.getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+            spe = sp.edit();
+        }
+    }
+
+
     private boolean init() {
         // Some kind of locking would be more correct, though I'm not sure I see anything that can
         // go wrong other than some wasted cycles.
 
         // Set up SharedPreferences.
-        sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
-        spe = sp.edit();
+        initSharedPreferences(this);
 
         // Configure the output directory.
         AndroSSService.setOutputDir(
+                this,
                 sp.getString(Prefs.OUTPUT_DIR_KEY, AndroSSService.DEFAULT_OUTPUT_DIR));
 
         AndroSSService.createExternalBinary(this);
