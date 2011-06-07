@@ -4,7 +4,6 @@ import net.tedstein.AndroSS.AndroSSService.DeviceType;
 import net.tedstein.AndroSS.util.RootUtils;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -17,7 +16,6 @@ import android.widget.Toast;
 
 public class MoreSettings extends PreferenceActivity {
     private PreferenceManager mPreferenceManager;
-    private SharedPreferences.Editor mSharedPreferenceEditor;
 
 
 
@@ -27,7 +25,6 @@ public class MoreSettings extends PreferenceActivity {
 
         addPreferencesFromResource(R.xml.more_settings);
         mPreferenceManager = getPreferenceManager();
-        mSharedPreferenceEditor = mPreferenceManager.getSharedPreferences().edit();
         final Context context = this;
 
         final EditTextPreference screenshot_dir =
@@ -36,6 +33,7 @@ public class MoreSettings extends PreferenceActivity {
         final String old_output_dir = AndroSSService.getOutputDir();
         screenshot_dir.setSummary(old_output_dir);
         et.setSingleLine();
+        et.setText(old_output_dir);
         screenshot_dir.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -79,7 +77,5 @@ public class MoreSettings extends PreferenceActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        mSharedPreferenceEditor.putString("screenshot_dir", AndroSSService.getOutputDir());
     }
 }
