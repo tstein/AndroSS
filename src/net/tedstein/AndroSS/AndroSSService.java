@@ -52,7 +52,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     private static final String fbread_path = "/system/bin/fbread";
     // Service state.
     private static boolean initialized = false;
-    private static String output_dir = "/sdcard/screenshots/";
+    private static String output_dir = DEFAULT_OUTPUT_DIR;
     private static long last_shake_event = 0;
     private static float old_x = 0;
     private static float old_y = 0;
@@ -147,8 +147,13 @@ public class AndroSSService extends Service implements SensorEventListener {
         spe.commit();
     }
 
-    public static String getOutputDir() {
-        return AndroSSService.output_dir;
+    public static String getOutputDir(Context context) {
+        if (AndroSSService.initialized) {
+            return AndroSSService.output_dir;
+        } else {
+            initSharedPreferences(context);
+            return sp.getString(Prefs.OUTPUT_DIR_KEY, AndroSSService.DEFAULT_OUTPUT_DIR);
+        }
     }
 
     public static boolean setOutputDir(Context context, String new_dir) {
@@ -382,7 +387,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     private boolean writeScreenshot(Bitmap bmp, String filename) {
         boolean success = false;
 
-        File output = new File(AndroSSService.getOutputDir() + filename);
+        File output = new File(AndroSSService.getOutputDir(this) + filename);
         try {
             // A little wasteful, maybe, but this avoids errors due to the
             // output dir not existing.
@@ -500,12 +505,12 @@ public class AndroSSService extends Service implements SensorEventListener {
         long compress_time = Calendar.getInstance().getTimeInMillis() - compress_start_time.getTimeInMillis();
 
         Log.d(TAG,
-                "Service: Write to " + AndroSSService.getOutputDir() + filename + ": "
+                "Service: Write to " + AndroSSService.getOutputDir(this) + filename + ": "
                 + (success ? "succeeded" : "failed"));
         if (success) {
             long total_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
 
-            registerNewScreenshot(AndroSSService.getOutputDir() + filename,
+            registerNewScreenshot(AndroSSService.getOutputDir(this) + filename,
                     start_time.getTimeInMillis());
             Log.d(TAG, "Service: Screenshot taken in " +
                     String.valueOf(total_time) +

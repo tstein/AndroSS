@@ -30,7 +30,7 @@ public class MoreSettings extends PreferenceActivity {
         final EditTextPreference screenshot_dir =
             (EditTextPreference)mPreferenceManager.findPreference("screenshot_dir");
         final EditText et = screenshot_dir.getEditText();
-        final String old_output_dir = AndroSSService.getOutputDir();
+        final String old_output_dir = AndroSSService.getOutputDir(context);
         screenshot_dir.setSummary(old_output_dir);
         et.setSingleLine();
         et.setText(old_output_dir);
@@ -39,7 +39,7 @@ public class MoreSettings extends PreferenceActivity {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 String new_output_dir = (String)newValue;
                 if (AndroSSService.setOutputDir(context, new_output_dir)) {
-                    screenshot_dir.setSummary(AndroSSService.getOutputDir());
+                    screenshot_dir.setSummary(new_output_dir);
                     return true;
                 } else {
                     Toast.makeText(context,
