@@ -64,7 +64,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     // Native function signatures.
     private static native int testForSu(String bin_location); 
-    public static native boolean testForTegra2();
+    public static native int testForTegra2();
     private static native String getFBInfoGeneric(String bin_location);
     private static native int[] getFBPixelsGeneric(String bin_location,
             int pixels, int bpp,
@@ -194,7 +194,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static DeviceType getDeviceType() {
         if (AndroSSService.dev_type == DeviceType.UNKNOWN) {
             Log.d(TAG, "Service: Don't know what kind of device we're on...");
-            if (AndroSSService.testForTegra2()) {
+            if (AndroSSService.testForTegra2() == 0) {
                 Log.d(TAG, "Service: This is a Tegra 2-based device.");
                 AndroSSService.dev_type = DeviceType.TEGRA_2;
             } else {

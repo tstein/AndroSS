@@ -1,10 +1,12 @@
 #include <linux/ioctl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <errno.h>
 #include <jni.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "android.h"
 #define MAX_INFO_BYTES 128
@@ -165,9 +167,20 @@ jint Java_net_tedstein_AndroSS_AndroSSService_testForSu(
 }
 
 
-jboolean Java_net_tedstein_AndroSS_AndroSSService_testForTegra2(
+jint Java_net_tedstein_AndroSS_AndroSSService_testForTegra2(
         JNIEnv * env, jobject this) {
-    return !(system("/system/bin/fbread 2>&1 >/dev/null"));
+    struct stat s;
+    if (stat("/system/bin/fbread", &s) < 0) {
+        if (errno != ENOENT) {
+            int err = errno;
+            LogW("NBridge: Unexpected error while checking for fbread:");
+            LogW(strerror(err));
+        }
+
+        return -1;
+    } else {
+        return 0;
+    }
 }
 
 
