@@ -1,12 +1,15 @@
 #include <linux/ioctl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <jni.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "android.h"
 #define MAX_INFO_BYTES 128
@@ -302,24 +305,40 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsGeneric(
 jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoTegra2(
         JNIEnv * env, jobject this,
         jstring bin_location) {
-    char strbuf[MAX_INFO_BYTES] = {0};
+    char * strbuf = (char *)calloc(1, MAX_INFO_BYTES);
     jstring ret = (*env)->NewStringUTF(env, strbuf);
-    char cmd[MAX_CMD_LEN] = {0};
-    const char * fbread_path = (*env)->GetStringUTFChars(env, bin_location, 0);
 
-    strncpy(cmd, fbread_path, MAX_CMD_LEN - 17);
-    // stdout is a bunch of pixels, but stderr is full of useful metadata.
-    strncat(cmd, " 2>&1 >/dev/null", 16);
+    const char * fbread_path_const = (*env)->GetStringUTFChars(env, bin_location, 0);
+    char * fbread_path = (char *)calloc(1, MAX_CMD_LEN);
+    strncpy(fbread_path, fbread_path_const, MAX_CMD_LEN - 1);
 
-    LogD("NBridge: Executing %s", cmd);
-    FILE * from_extbin = popen(cmd, "r");
-    fread(strbuf, MAX_INFO_BYTES, 1, from_extbin);
-    if (ferror(from_extbin)) {
-        LogE("Nbridge: Error reading from subprocess!");
-    } else {
-        ret = (*env)->NewStringUTF(env, strbuf);
+    char ** fbread_args = (char **)calloc(2, sizeof(char *));
+    *fbread_args = fbread_path;
+    *(fbread_args + 1) = 0;
+
+    int bytes_read = -1;
+    int pipefd[2];
+    int child_status;
+
+    pipe(pipefd);
+    LogD("NBridge: About to fork+exec for framebuffer info.");
+    int cpid = fork();
+    if (cpid == 0) {
+        LogD("NBridge2: Child here!");
+        close(pipefd[0]);
+        LogD(fbread_path);
+        dup2(pipefd[1], 2);
+        dup2(open("/dev/null", O_WRONLY), 1);
+        execv(fbread_path, fbread_args);
     }
-    pclose(from_extbin);
+    LogD("NBridge: Parent here! Child pid is %d", cpid);
+    close(pipefd[1]);
+    bytes_read = read(pipefd[0], strbuf, MAX_INFO_BYTES - 1);
+    close(pipefd[0]);
+    waitpid(cpid, &child_status, 0);
+
+    LogD("NBridge: read %d bytes from child: %s", bytes_read, strbuf);
+    ret = (*env)->NewStringUTF(env, strbuf);
     return ret;
 }
 
