@@ -194,13 +194,15 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static DeviceType getDeviceType() {
         if (AndroSSService.dev_type == DeviceType.UNKNOWN) {
             Log.d(TAG, "Service: Don't know what kind of device we're on...");
-            if (AndroSSService.testForTegra2() == 0) {
-                Log.d(TAG, "Service: This is a Tegra 2-based device.");
-                AndroSSService.dev_type = DeviceType.TEGRA_2;
-            } else {
-                Log.d(TAG, "Service: This is a regular device.");
-                AndroSSService.dev_type = DeviceType.GENERIC;
-            }
+            Log.d(TAG, "Service: Assuming GENERIC.");
+            AndroSSService.dev_type = DeviceType.GENERIC;
+//            if (new File(fbread_path).exists()) {
+//                Log.d(TAG, "Service: This is a Tegra 2-based device.");
+//                AndroSSService.dev_type = DeviceType.TEGRA_2;
+//            } else {
+//                Log.d(TAG, "Service: This is a regular device.");
+//                AndroSSService.dev_type = DeviceType.GENERIC;
+//            }
         }
 
         return AndroSSService.dev_type;
