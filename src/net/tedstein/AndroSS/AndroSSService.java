@@ -43,6 +43,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static int screen_width;
     public static int screen_height;
     public static int screen_depth;
+    public static int fb_stride;
     public static int[] c_offsets;
     public static int[] c_sizes;
     public static String files_dir;
@@ -308,6 +309,12 @@ public class AndroSSService extends Service implements SensorEventListener {
             for (int color = 0; color < 4; ++color) {
                 AndroSSService.c_offsets[color] = Integer.parseInt(params[3 + (color * 2)]);
                 AndroSSService.c_sizes[color] = Integer.parseInt(params[4 + (color * 2)]);
+            }
+
+            AndroSSService.fb_stride = Integer.parseInt(params[11]);
+            if (fb_stride != AndroSSService.screen_width * (AndroSSService.screen_depth / 8)) {
+                Log.w(TAG, "Service: stride != width * depth! Assuming depth = stride / width.");
+                AndroSSService.screen_depth = (fb_stride / AndroSSService.screen_width) * 8;
             }
             break;
         case TEGRA_2:

@@ -31,6 +31,7 @@ public class DebugInfo extends Activity {
             TextView width = (TextView)findViewById(R.id.tv_width_value);
             TextView height = (TextView)findViewById(R.id.tv_height_value);
             TextView depth = (TextView)findViewById(R.id.tv_depth_value);
+            TextView stride = (TextView)findViewById(R.id.tv_stride_value);
             TextView red = (TextView)findViewById(R.id.tv_red);
             TextView green = (TextView)findViewById(R.id.tv_green);
             TextView blue = (TextView)findViewById(R.id.tv_blue);
@@ -41,6 +42,7 @@ public class DebugInfo extends Activity {
             width.setText(params[0]);
             height.setText(params[1]);
             depth.setText(params[2]);
+            stride.setText(params[11]);
             red.setText(getString(R.string.color_param,
                     getString(R.string.red) + ":\t",
                     params[8],

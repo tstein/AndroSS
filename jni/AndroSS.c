@@ -42,6 +42,7 @@ static const char * FB_PATH = "/dev/fb0";
  *          blue length
  *          alpha offset
  *          alpha length
+ *          stride
  *
  *      case (FB_DATA):
  *      If this has a value, this binary will interpret it as the number of
@@ -51,15 +52,22 @@ static const char * FB_PATH = "/dev/fb0";
 int writeFBParams(int output_fd, int fb_fd)
 {
     // Run the appropriate ioctls to find out what we're dealing with.
+    struct fb_fix_screeninfo fb_fixinfo;
     struct fb_var_screeninfo fb_varinfo;
+    if (ioctl(fb_fd, FBIOGET_FSCREENINFO, &fb_fixinfo) < 0) {
+        LogE("External: fixinfo ioctl failed.");
+        close(fb_fd);
+        return(1);
+    }
+
     if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &fb_varinfo) < 0) {
-        LogE("External: ioctl failed.");
+        LogE("External: varinfo ioctl failed.");
         close(fb_fd);
         return(1);
     }
 
     char output_data[STRING_BUFFER_SIZE] = {0};
-    sprintf(output_data, "%u %u %u %u %u %u %u %u %u %u %u",
+    sprintf(output_data, "%u %u %u %u %u %u %u %u %u %u %u %u",
             fb_varinfo.xres,
             fb_varinfo.yres,
             fb_varinfo.bits_per_pixel,
@@ -70,7 +78,8 @@ int writeFBParams(int output_fd, int fb_fd)
             fb_varinfo.red.offset,
             fb_varinfo.red.length,
             fb_varinfo.transp.offset,
-            fb_varinfo.transp.length);
+            fb_varinfo.transp.length,
+            fb_fixinfo.line_length);
 
     write(output_fd, output_data, STRING_BUFFER_SIZE * sizeof(char));
     return(0);

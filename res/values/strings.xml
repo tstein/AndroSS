@@ -49,6 +49,7 @@
   <string name="width_label">width</string>
   <string name="height_label">height</string>
   <string name="depth_label">depth</string>
+  <string name="stride_label">stride</string>
   <string name="red">red</string>
   <string name="green">green</string>
   <string name="blue">blue</string>
