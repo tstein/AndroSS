@@ -5,6 +5,7 @@ import net.tedstein.AndroSS.util.RootUtils;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -47,6 +48,17 @@ public class MoreSettings extends PreferenceActivity {
                             Toast.LENGTH_LONG).show();
                     return false;
                 }
+            }
+        });
+
+        CheckBoxPreference enable_rotation =
+            (CheckBoxPreference)mPreferenceManager.findPreference("enable_rotation");
+        enable_rotation.setChecked(AndroSSService.getRotationEnabled());
+        enable_rotation.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                AndroSSService.setRotationEnabled((Boolean)newValue);
+                return true;
             }
         });
 

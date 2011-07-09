@@ -7,6 +7,10 @@
       android:title="@string/screenshot_dir_text"
       android:summary=""
       android:dialogTitle="@string/screenshot_dir_prompt"/>
+    <CheckBoxPreference
+      android:key="enable_rotation"
+      android:title="@string/rotation_title"
+      android:summary="@string/rotation_summary"/>
     <Preference
       android:key="retry_root_check"
       android:title="@string/retry_root_check"/>

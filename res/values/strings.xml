@@ -38,6 +38,11 @@
   <string name="more_settings_menu">(More) Settings</string>
   <string name="screenshot_dir_text">Save screenshots to:</string>
   <string name="screenshot_dir_prompt">Save to:</string>
+  <string name="rotation_title">Rotate screenshots</string>
+  <string name="rotation_summary">
+               If checked, rotate according to screen orientation before saving. Disable this for
+               slightly improved performance.</string>
+
   <string name="retry_root_check">Retry root check</string>
   <string name="goto_debug_prompt">Debug info</string>
 
