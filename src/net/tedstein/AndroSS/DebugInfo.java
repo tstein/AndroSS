@@ -1,6 +1,7 @@
 package net.tedstein.AndroSS;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -11,12 +12,16 @@ public class DebugInfo extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         String param_string = AndroSSService.getParamString();
+        TextView board;
 
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
             setContentView(R.layout.debug_info);
 
+            board = (TextView)findViewById(R.id.tv_board);
+            board.setText(getString(R.string.board) + " " + Build.BOARD);
             if (param_string.equals("")) {
                 TextView err_text = new TextView(this);
                 err_text.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15F);
@@ -24,6 +29,7 @@ public class DebugInfo extends Activity {
                 
                 LinearLayout ll = (LinearLayout)findViewById(R.id.ll_debug_info);
                 ll.removeAllViews();
+                ll.addView(board);
                 ll.addView(err_text);
                 return;
             }
@@ -63,6 +69,9 @@ public class DebugInfo extends Activity {
             break;
         case TEGRA_2:
             setContentView(R.layout.debug_info_tegra);
+
+            board = (TextView)findViewById(R.id.tv_board_tegra);
+            board.setText(getString(R.string.board) + " " + Build.BOARD);
 
             TextView fbread_string = (TextView)findViewById(R.id.tv_framebuffer_string_tegra);
             fbread_string.setText(param_string);

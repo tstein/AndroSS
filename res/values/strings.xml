@@ -45,6 +45,7 @@
   <string name="debug_info_error">AndroSS could not initialize or has not been initialized yet. Try checking enable in the main settings.</string>
   <string name="change_output_error">Cannot write to %s. Output directory unchanged.</string>
 
+  <string name="board">Board:</string>
   <string name="framebuffer_info">Framebuffer parameters:</string>
   <string name="width_label">width</string>
   <string name="height_label">height</string>
