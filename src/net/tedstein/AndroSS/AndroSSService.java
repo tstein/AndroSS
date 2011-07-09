@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -26,6 +27,8 @@ import android.os.Vibrator;
 import android.provider.MediaStore.Images;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Surface;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 public class AndroSSService extends Service implements SensorEventListener {
@@ -472,7 +475,14 @@ public class AndroSSService extends Service implements SensorEventListener {
 
         int bpp = AndroSSService.screen_depth / 8;
 
-        // First order of business is to get the pixels.
+        // Save the rotation state immediately.
+        // getOrientation() is deprecated. As of API level 8, we should be
+        // using getRotation() instead. If the minSdkLevel is raised above 7,
+        // this should be changed. 
+        int rotation = ((WindowManager)getSystemService(Context.WINDOW_SERVICE))
+            .getDefaultDisplay().getOrientation();
+
+        // First serious order of business is to get the pixels.
         int[] pixels = {0};
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
@@ -489,12 +499,35 @@ public class AndroSSService extends Service implements SensorEventListener {
         long get_pixels_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
 
         Log.d(TAG, "Service: Creating bitmap.");
+
+        // We make a bitmap that is a square defined by the larger of the two
+        // screen dimensions so that we have space to rotate.
+        int bitmap_size = (screen_height > screen_width ? screen_height : screen_width);        
         Bitmap bmp_ss = Bitmap.createBitmap(
-                screen_width,
-                screen_height,
+                bitmap_size,
+                bitmap_size,
                 Bitmap.Config.ARGB_8888);
         bmp_ss.setPixels(pixels, 0, screen_width,
                 0, 0, screen_width, screen_height);
+
+        Matrix rotator = new Matrix();
+        switch (rotation) {
+        case (Surface.ROTATION_0):
+            break;
+        case (Surface.ROTATION_90):
+            rotator.postRotate(270);
+            break;
+        case (Surface.ROTATION_180):
+            rotator.postRotate(180);
+            break;
+        case (Surface.ROTATION_270):
+            rotator.postRotate(90);
+            break;
+        }
+
+        // screen_{width,height} are applied before the rotate, so we don't
+        // need to change them based on rotation.
+        bmp_ss = Bitmap.createBitmap(bmp_ss, 0, 0, screen_width, screen_height, rotator, false); 
 
         // Build an intelligent filename, write out to file, and register with
         // the Android media services.
