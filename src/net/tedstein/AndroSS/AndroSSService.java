@@ -37,6 +37,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     }
 
     public static enum CompressionType {PNG, JPG_HQ, JPG_FAST};
+    public static enum DeviceType { UNKNOWN, GENERIC, TEGRA_2 };
 
     private static final String TAG = "AndroSS";
     private static final String DEFAULT_OUTPUT_DIR = "/sdcard/screenshots";
@@ -44,14 +45,13 @@ public class AndroSSService extends Service implements SensorEventListener {
     private static final long IGNORE_SHAKE_INTERVAL = 1000 * 1000 * 1000;
     private static SensorManager sm;
     // Phone graphical parameters and fixed config.
-    public static int screen_width;
-    public static int screen_height;
-    public static int screen_depth;
-    public static int fb_stride;
-    public static int[] c_offsets;
-    public static int[] c_sizes;
-    public static String files_dir;
-    public static enum DeviceType { UNKNOWN, GENERIC, TEGRA_2 };
+    private static int screen_width;
+    private static int screen_height;
+    private static int screen_depth;
+    private static int fb_stride;
+    private static int[] c_offsets;
+    private static int[] c_sizes;
+    private static String files_dir;
     private static DeviceType dev_type = DeviceType.UNKNOWN;
     // Static info about Tegra 2 devices.
     private static final String fbread_path = "/system/bin/fbread";
