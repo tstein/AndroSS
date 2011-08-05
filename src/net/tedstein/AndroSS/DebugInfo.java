@@ -26,7 +26,7 @@ public class DebugInfo extends Activity {
                 TextView err_text = new TextView(this);
                 err_text.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15F);
                 err_text.setText(R.string.debug_info_error);
-                
+
                 LinearLayout ll = (LinearLayout)findViewById(R.id.ll_debug_info);
                 ll.removeAllViews();
                 ll.addView(board);

@@ -21,6 +21,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 public class ConfigurationActivity extends Activity {
     static {
@@ -29,6 +30,7 @@ public class ConfigurationActivity extends Activity {
 
     private static final String TAG = "AndroSS";
     private DeviceType mDeviceType = DeviceType.UNKNOWN;
+
 
 
 
@@ -52,14 +54,18 @@ public class ConfigurationActivity extends Activity {
         }
     }
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (AndroSSService.getOpenGLVendor().equals("unknown")) {
+            Intent i = new Intent(this, GLDetector.class);
+            startActivityForResult(i, 0);
+        }
+
         setContentView(R.layout.config);
 
         mDeviceType = AndroSSService.getDeviceType();
+
         final Context c = this;
         final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
 
@@ -223,5 +229,11 @@ public class ConfigurationActivity extends Activity {
         notifyToast.setChecked(sp.getBoolean(Prefs.TOAST_FEEDBACK_KEY, false));
         notifyAudio.setChecked(sp.getBoolean(Prefs.AUDIO_FEEDBACK_KEY, false));
         notifyVibe.setChecked(sp.getBoolean(Prefs.VIBRATE_FEEDBACK_KEY, false));
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Toast.makeText(this, "OpenGL vendor: " + AndroSSService.getOpenGLVendor(), Toast.LENGTH_LONG).show();
     }
 }

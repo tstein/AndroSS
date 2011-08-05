@@ -170,23 +170,6 @@ jint Java_net_tedstein_AndroSS_AndroSSService_testForSu(
 }
 
 
-jint Java_net_tedstein_AndroSS_AndroSSService_testForTegra2(
-        JNIEnv * env, jobject this) {
-    struct stat s;
-    if (stat("/system/bin/fbread", &s) < 0) {
-        if (errno != ENOENT) {
-            int err = errno;
-            LogW("NBridge: Unexpected error while checking for fbread:");
-            LogW(strerror(err));
-        }
-
-        return -1;
-    } else {
-        return 0;
-    }
-}
-
-
 
 /*
  * Generic screenshot code for devices where we have to go root and read fb0.

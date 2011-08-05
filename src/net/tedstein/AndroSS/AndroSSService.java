@@ -53,6 +53,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     private static int[] c_sizes;
     private static String files_dir;
     private static DeviceType dev_type = DeviceType.UNKNOWN;
+    private static String opengl_vendor = "unknown";
     // Static info about Tegra 2 devices.
     private static final String fbread_path = "/system/bin/fbread";
     // Service state.
@@ -68,8 +69,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Native function signatures.
-    private static native int testForSu(String bin_location); 
-    public static native int testForTegra2();
+    private static native int testForSu(String bin_location);
     private static native String getFBInfoGeneric(String bin_location);
     private static native int[] getFBPixelsGeneric(String bin_location,
             int pixels, int bpp,
@@ -78,7 +78,6 @@ public class AndroSSService extends Service implements SensorEventListener {
     private static native int[] getFBPixelsTegra2(String bin_location,
             int pixels, int bpp,
             int[] offsets, int[] sizes);
-
 
 
     // Public static functions.
@@ -100,7 +99,7 @@ public class AndroSSService extends Service implements SensorEventListener {
         } else {
             return sp.getBoolean(Prefs.PERSISTENT_KEY, false);
         }
-    }   
+    }
     public static void setPersistent(boolean enable) {
         spe.putBoolean(Prefs.PERSISTENT_KEY, enable);
         spe.commit();
@@ -223,6 +222,13 @@ public class AndroSSService extends Service implements SensorEventListener {
         return AndroSSService.dev_type;
     }
 
+    public static void setOpenGLVendor(String vendor) {
+        AndroSSService.opengl_vendor = vendor;
+    }
+
+    public static String getOpenGLVendor() {
+        return AndroSSService.opengl_vendor;
+    }
 
 
     // Inherited methods.

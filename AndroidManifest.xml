@@ -13,16 +13,17 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
+    <activity android:name="GLDetector"/>
     <activity android:name="MoreSettings"/>
     <activity android:name="DebugInfo"/>
 
     <service android:name="AndroSSService"></service>
 
-    <receiver android:name="CameraButtonReceiver"> 
+    <receiver android:name="CameraButtonReceiver">
       <intent-filter android:priority="999999">
-        <action android:name="android.intent.action.CAMERA_BUTTON"/> 
-      </intent-filter> 
-    </receiver> 
+        <action android:name="android.intent.action.CAMERA_BUTTON"/>
+      </intent-filter>
+    </receiver>
   </application>
 
   <uses-sdk android:minSdkVersion="7"></uses-sdk>
