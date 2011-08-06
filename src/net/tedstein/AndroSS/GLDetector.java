@@ -25,7 +25,6 @@ public class GLDetector extends Activity {
             i.putExtra(VENDOR_EXTRA, vendor);
             setResult(0, i);
             finish();
-            overridePendingTransition(android.R.anim.fade_in, 0);
         }
 
         public void onSurfaceChanged(GL10 gl, int w, int h) { }

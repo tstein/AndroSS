@@ -243,5 +243,6 @@ public class ConfigurationActivity extends Activity {
         Toast.makeText(this, "OpenGL vendor: " + AndroSSService.getOpenGLVendor(),
                        Toast.LENGTH_LONG).show();
         suppress_root_dialog = false;
+        overridePendingTransition(android.R.anim.fade_in, 0);
     }
 }
