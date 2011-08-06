@@ -7,13 +7,15 @@
     android:label="@string/app_name"
     android:debuggable="false">
     <activity android:label="@string/app_name"
-      android:name="ConfigurationActivity">
+      android:name="ConfigurationActivity"
+      android:theme="@android:style/Theme.NoTitleBar">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
-    <activity android:name="GLDetector"/>
+    <activity android:name="GLDetector"
+      android:theme="@android:style/Theme.NoTitleBar"/>
     <activity android:name="MoreSettings"/>
     <activity android:name="DebugInfo"/>
 

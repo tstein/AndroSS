@@ -14,8 +14,7 @@ public class GLDetector extends Activity {
     private static final String TAG = "AndroSS";
 
 
-    // Borrowed from
-    // http://android-developers.blogspot.com/2009/04/introducing-glsurfaceview.html
+
     class GLVendorDetectionRenderer implements GLSurfaceView.Renderer {
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             String vendor = gl.glGetString(GL10.GL_VENDOR);
@@ -26,15 +25,12 @@ public class GLDetector extends Activity {
             i.putExtra(VENDOR_EXTRA, vendor);
             setResult(0, i);
             finish();
+            overridePendingTransition(android.R.anim.fade_in, 0);
         }
 
-        public void onSurfaceChanged(GL10 gl, int w, int h) {
-            gl.glViewport(0, 0, w, h);
-        }
+        public void onSurfaceChanged(GL10 gl, int w, int h) { }
 
-        public void onDrawFrame(GL10 gl) {
-            gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-        }
+        public void onDrawFrame(GL10 gl) { }
     }
 
 

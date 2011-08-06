@@ -30,7 +30,7 @@ public class ConfigurationActivity extends Activity {
 
     private static final String TAG = "AndroSS";
     private DeviceType mDeviceType = DeviceType.UNKNOWN;
-
+    private boolean suppress_root_dialog = false;
 
 
 
@@ -56,25 +56,21 @@ public class ConfigurationActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Bring back the default theme. If the GLDetector runs, this won't take
+        // effect until it finishes, so there's no animation weirdness.
+        setTheme(android.R.style.Theme);
+
         super.onCreate(savedInstanceState);
         if (AndroSSService.getOpenGLVendor().equals("unknown")) {
+            suppress_root_dialog = true;
             Intent i = new Intent(this, GLDetector.class);
             startActivityForResult(i, 0);
+            overridePendingTransition(0, 0);
         }
 
         setContentView(R.layout.config);
 
-        mDeviceType = AndroSSService.getDeviceType();
-
         final Context c = this;
-        final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
-
-        if (mDeviceType == DeviceType.GENERIC &&
-                sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
-            Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
-            RootUtils.showRootTestMessage(c);
-        }
-
         CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
         CheckBox persistent = (CheckBox)findViewById(R.id.PersistenceCheckBox);
 
@@ -196,6 +192,7 @@ public class ConfigurationActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
+        final Context c = this;
         final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
 
         CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
@@ -229,11 +226,22 @@ public class ConfigurationActivity extends Activity {
         notifyToast.setChecked(sp.getBoolean(Prefs.TOAST_FEEDBACK_KEY, false));
         notifyAudio.setChecked(sp.getBoolean(Prefs.AUDIO_FEEDBACK_KEY, false));
         notifyVibe.setChecked(sp.getBoolean(Prefs.VIBRATE_FEEDBACK_KEY, false));
+
+        if (suppress_root_dialog == false) {
+            mDeviceType = AndroSSService.getDeviceType();
+            if (mDeviceType == DeviceType.GENERIC &&
+                sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
+                Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
+                RootUtils.showRootTestMessage(c);
+            }
+        }
     }
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Toast.makeText(this, "OpenGL vendor: " + AndroSSService.getOpenGLVendor(), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "OpenGL vendor: " + AndroSSService.getOpenGLVendor(),
+                       Toast.LENGTH_LONG).show();
+        suppress_root_dialog = false;
     }
 }
