@@ -21,7 +21,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.Vibrator;
 import android.provider.MediaStore.Images;
@@ -207,10 +206,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static DeviceType getDeviceType() {
         if (AndroSSService.dev_type == DeviceType.UNKNOWN) {
             Log.d(TAG, "Service: Don't know what kind of device we're on...");
-            if (
-                    Build.BOARD.equals("olympus") || // Motorola Atrix
-                    Build.BOARD.equals("daytona")    // Motorola Droid X2
-                    ) {
+            if (getOpenGLVendor().toLowerCase().contains("nvidia")) {
                 Log.d(TAG, "Service: This is a Tegra 2-based device.");
                 AndroSSService.dev_type = DeviceType.TEGRA_2;
             } else {
