@@ -19,7 +19,6 @@ public class GLDetector extends Activity {
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             String vendor = gl.glGetString(GL10.GL_VENDOR);
             Log.e(TAG, "GLDetector: vendor is " + vendor);
-            AndroSSService.setOpenGLVendor(vendor);
 
             Intent i = new Intent();
             i.putExtra(VENDOR_EXTRA, vendor);

@@ -21,7 +21,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 public class ConfigurationActivity extends Activity {
     static {
@@ -30,7 +29,6 @@ public class ConfigurationActivity extends Activity {
 
     private static final String TAG = "AndroSS";
     private DeviceType mDeviceType = DeviceType.UNKNOWN;
-    private boolean suppress_root_dialog = false;
 
 
 
@@ -61,8 +59,9 @@ public class ConfigurationActivity extends Activity {
         setTheme(android.R.style.Theme);
 
         super.onCreate(savedInstanceState);
+        // If vendor is unknown, we need to check that. We'll do the root check
+        // in onActivityResult() if this isn't a Tegra device.
         if (AndroSSService.getOpenGLVendor().equals("unknown")) {
-            suppress_root_dialog = true;
             Intent i = new Intent(this, GLDetector.class);
             startActivityForResult(i, 0);
             overridePendingTransition(0, 0);
@@ -192,7 +191,6 @@ public class ConfigurationActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        final Context c = this;
         final SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
 
         CheckBox enabled = (CheckBox)findViewById(R.id.ServiceStatusCheckBox);
@@ -226,23 +224,21 @@ public class ConfigurationActivity extends Activity {
         notifyToast.setChecked(sp.getBoolean(Prefs.TOAST_FEEDBACK_KEY, false));
         notifyAudio.setChecked(sp.getBoolean(Prefs.AUDIO_FEEDBACK_KEY, false));
         notifyVibe.setChecked(sp.getBoolean(Prefs.VIBRATE_FEEDBACK_KEY, false));
-
-        if (suppress_root_dialog == false) {
-            mDeviceType = AndroSSService.getDeviceType();
-            if (mDeviceType == DeviceType.GENERIC &&
-                sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
-                Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
-                RootUtils.showRootTestMessage(c);
-            }
-        }
     }
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Toast.makeText(this, "OpenGL vendor: " + AndroSSService.getOpenGLVendor(),
-                       Toast.LENGTH_LONG).show();
-        suppress_root_dialog = false;
         overridePendingTransition(android.R.anim.fade_in, 0);
+        final Context c = this;
+        SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
+        AndroSSService.setOpenGLVendor(data.getStringExtra(GLDetector.VENDOR_EXTRA));
+
+        mDeviceType = AndroSSService.getDeviceType();
+        if (mDeviceType == DeviceType.GENERIC &&
+            sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
+            Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
+            RootUtils.showRootTestMessage(c);
+        }
     }
 }
