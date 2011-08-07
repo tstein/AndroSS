@@ -29,6 +29,7 @@ public class ConfigurationActivity extends Activity {
 
     private static final String TAG = "AndroSS";
     private DeviceType mDeviceType = DeviceType.UNKNOWN;
+    private boolean started_other_activity = false;
 
 
 
@@ -44,6 +45,7 @@ public class ConfigurationActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case R.id.config_more_settings:
+            this.started_other_activity = true;
             Intent i = new Intent(this, MoreSettings.class);
             startActivity(i);
             return true;
@@ -62,6 +64,7 @@ public class ConfigurationActivity extends Activity {
         // If vendor is unknown, we need to check that. We'll do the root check
         // in onActivityResult() if this isn't a Tegra device.
         if (AndroSSService.getOpenGLVendor().equals("unknown")) {
+            this.started_other_activity = true;
             Intent i = new Intent(this, GLDetector.class);
             startActivityForResult(i, 0);
             overridePendingTransition(0, 0);
@@ -228,8 +231,33 @@ public class ConfigurationActivity extends Activity {
 
 
     @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (this.started_other_activity == false) {
+            finish();
+        }
+    }
+
+
+    @Override
+    protected void onRestart() {
+        super.onResume();
+
+        this.started_other_activity = false;
+    }
+
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         overridePendingTransition(android.R.anim.fade_in, 0);
+        // It would seem like this isn't necessary because this is set to false
+        // in onRestart(), but, for reasons I can't confidently discern, only
+        // setting it there makes it possible to get two ConfigurationActivities
+        // in the stack if the root dialog gets shown. Doing it here as well
+        // fixes that.
+        this.started_other_activity = false;
+
         final Context c = this;
         SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
         AndroSSService.setOpenGLVendor(data.getStringExtra(GLDetector.VENDOR_EXTRA));
