@@ -344,7 +344,7 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsTegra2(
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
-    unsigned char * pixbuf = malloc((pixels * 4));
+    unsigned char * pixbuf = malloc(pixels * 4);
     int pixbuf_offset = (pixels * 4) - (pixels * bpp);
 
     // And then slurp the data.
