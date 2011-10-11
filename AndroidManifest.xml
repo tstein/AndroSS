@@ -24,6 +24,7 @@
     <receiver android:name="CameraButtonReceiver">
       <intent-filter android:priority="999999">
         <action android:name="android.intent.action.CAMERA_BUTTON"/>
+        <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </receiver>
   </application>
