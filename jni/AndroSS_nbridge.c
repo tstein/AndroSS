@@ -341,7 +341,6 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsTegra2(
     char cmd[MAX_CMD_LEN] = {0};
     const char * fbread_path = (*env)->GetStringUTFChars(env, bin_location, 0);
     strncpy(cmd, fbread_path, MAX_CMD_LEN - 1);
-    LogD("NBridge: Executing %s", cmd);
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
