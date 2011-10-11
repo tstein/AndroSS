@@ -30,11 +30,11 @@ public class MoreSettings extends PreferenceActivity {
 
         final EditTextPreference screenshot_dir =
             (EditTextPreference)mPreferenceManager.findPreference("screenshot_dir");
-        final EditText et = screenshot_dir.getEditText();
+        final EditText et_screenshot_dir = screenshot_dir.getEditText();
         final String old_output_dir = AndroSSService.getOutputDir(context);
         screenshot_dir.setSummary(old_output_dir);
-        et.setSingleLine();
-        et.setText(old_output_dir);
+        et_screenshot_dir.setSingleLine();
+        et_screenshot_dir.setText(old_output_dir);
         screenshot_dir.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -50,6 +50,30 @@ public class MoreSettings extends PreferenceActivity {
                 }
             }
         });
+
+        final EditTextPreference su_path =
+            (EditTextPreference)mPreferenceManager.findPreference("su_path");
+        final EditText et_su_path = screenshot_dir.getEditText();
+        final String old_su_path = AndroSSService.getSuPath(context);
+        su_path.setSummary(old_su_path);
+        et_su_path.setSingleLine();
+        et_su_path.setText(old_su_path);
+        su_path.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                String new_su_path = (String)newValue;
+                if (AndroSSService.setSuPath(context, new_su_path)) {
+                    su_path.setSummary(new_su_path);
+                    return true;
+                } else {
+                    Toast.makeText(context,
+                            context.getString(R.string.change_su_error, new_su_path),
+                            Toast.LENGTH_LONG).show();
+                    return false;
+                }
+            }
+        });
+
 
         CheckBoxPreference enable_rotation =
             (CheckBoxPreference)mPreferenceManager.findPreference("enable_rotation");

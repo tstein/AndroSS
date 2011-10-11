@@ -18,5 +18,6 @@ public class Prefs {
     public static final String HAVE_TESTED_ROOT_KEY = "have_tested_root";
 
     public static final String OUTPUT_DIR_KEY = "output_dir";
+    public static final String SU_PATH_KEY = "su_path";
     public static final String ROTATION_KEY = "rotation_enabled";
 }

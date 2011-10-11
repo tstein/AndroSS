@@ -40,6 +40,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     private static final String TAG = "AndroSS";
     private static final String DEFAULT_OUTPUT_DIR = "/sdcard/screenshots";
+    private static final String DEFAULT_SU_PATH = "/system/xbin/su";
     private static final float ACCEL_THRESH = 7.0F;
     private static final long IGNORE_SHAKE_INTERVAL = 1000 * 1000 * 1000;
     private static SensorManager sm;
@@ -58,6 +59,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     // Service state.
     private static boolean initialized = false;
     private static String output_dir = DEFAULT_OUTPUT_DIR;
+    private static String su_path = DEFAULT_SU_PATH;
     private static long last_shake_event = 0;
     private static float old_x = 0;
     private static float old_y = 0;
@@ -70,11 +72,8 @@ public class AndroSSService extends Service implements SensorEventListener {
     // Native function signatures.
     private static native int testForSu(String bin_location);
     private static native String getFBInfoGeneric(String bin_location);
-    private static native int[] getFBPixelsGeneric(String bin_location,
-            int pixels, int bpp,
-            int[] offsets, int[] sizes);
     private static native String getFBInfoTegra2(String bin_location);
-    private static native int[] getFBPixelsTegra2(String bin_location,
+    private static native int[] getFBPixels(int type, String command,
             int pixels, int bpp,
             int[] offsets, int[] sizes);
 
@@ -176,6 +175,31 @@ public class AndroSSService extends Service implements SensorEventListener {
             return true;
         } else {
             Log.d(TAG, "Service: Cannot write to requested output dir: " + new_dir);
+            return false;
+        }
+    }
+
+    public static String getSuPath(Context context) {
+        if (AndroSSService.initialized) {
+            return AndroSSService.su_path;
+        } else {
+            initSharedPreferences(context);
+            return sp.getString(Prefs.SU_PATH_KEY, AndroSSService.DEFAULT_SU_PATH);
+        }
+    }
+
+    public static boolean setSuPath(Context context, String new_su) {
+        File f = new File(new_su);
+        if (f.canRead()) {
+            initSharedPreferences(context);
+            spe.putString(Prefs.SU_PATH_KEY, new_su);
+            spe.commit();
+
+            AndroSSService.su_path = new_su;
+            Log.d(TAG, "Service: Updated su path to: " + new_su);
+            return true;
+        } else {
+            Log.d(TAG, "Service: su path appears invalid: " + new_su);
             return false;
         }
     }
@@ -287,6 +311,11 @@ public class AndroSSService extends Service implements SensorEventListener {
         AndroSSService.setOutputDir(
                 this,
                 sp.getString(Prefs.OUTPUT_DIR_KEY, AndroSSService.DEFAULT_OUTPUT_DIR));
+
+        // Configure su.
+        AndroSSService.setSuPath(
+                this,
+                sp.getString(Prefs.SU_PATH_KEY, AndroSSService.DEFAULT_SU_PATH));
 
         AndroSSService.createExternalBinary(this);
         String param_string;
@@ -511,22 +540,36 @@ public class AndroSSService extends Service implements SensorEventListener {
 
         // First serious order of business is to get the pixels.
         int[] pixels = {0};
+        String command = "";
+
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
-            pixels = getFBPixelsGeneric(AndroSSService.files_dir,
-                    screen_width * screen_height, bpp,
-                    c_offsets, c_sizes);
+            command =
+                AndroSSService.getSuPath(this) + " -c " + AndroSSService.files_dir + "/AndroSS";
             break;
         case TEGRA_2:
-            pixels = getFBPixelsTegra2(fbread_path,
-                    screen_width * screen_height, bpp,
-                    c_offsets, c_sizes);
+            command = fbread_path;
             break;
         }
+        pixels = getFBPixels(getDeviceType().ordinal(), command,
+                    screen_width * screen_height, bpp,
+                    c_offsets, c_sizes);
+
         long get_pixels_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();
 
-        Log.d(TAG, "Service: Creating bitmap.");
+        if (pixels == null) {
+            String message;
+            if (getSuPath(this).equals(DEFAULT_SU_PATH) == false) {
+                message = getString(R.string.null_pixels_custom_su_error);
+            } else {
+                message = getString(R.string.null_pixels_error);
+            }
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            stopSelf();
+            return;
+        }
 
+        Log.d(TAG, "Service: Creating bitmap.");
         Bitmap bmp_ss = Bitmap.createBitmap(
                 bitmap_width,
                 bitmap_height,

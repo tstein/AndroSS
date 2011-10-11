@@ -20,6 +20,10 @@
 static const char * TAG = "AndroSS";
 static const char * MODE_ENVVAR = "ANDROSS_MODE";
 static const char * FB_BYTES_ENVVAR = "ANDROSS_FRAMEBUFFER_BYTES";
+static const ssize_t TEGRA_SKIP_BYTES = 52;
+// These MUST be kept consistent with the enum DeviceType in AndroSSService!
+static const int TYPE_GENERIC = 1;
+static const int TYPE_TEGRA = 2;
 // Define some masks so we don't have to calculate them later.
 const uint32_t masks[32] = {
     0x00000001,
@@ -210,78 +214,6 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoGeneric(
 }
 
 
-jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsGeneric(
-        JNIEnv * env, jobject this,
-        jstring bin_location,
-        jint pixels, jint bpp,
-        jintArray offsets_j, jintArray sizes_j) {
-    // Extract color offsets and sizes from the Java array types.
-    int offsets[4], sizes[4];
-    (*env)->GetIntArrayRegion(env, offsets_j, 0, 4, offsets);
-    (*env)->GetIntArrayRegion(env, sizes_j, 0, 4, sizes);
-
-    char cmd[MAX_CMD_LEN] = {0};
-    const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
-    strncpy(cmd, "su -c    ", 9);
-    strncat(cmd, data_dir, MAX_CMD_LEN - 9 - 16);
-    strncat(cmd, "/AndroSS", 16);
-
-    // Allocate enough space to store all pixels in ARGB_8888. We'll initially
-    // put the pixels at the highest address within our buffer they can fit.
-    uint8_t * pixbuf = malloc(pixels * 4);
-    int pixbuf_offset = (pixels * 4) - (pixels * bpp);
-    char bytes_str[MAX_BYTES_DIGITS];
-    sprintf(bytes_str, "%u", pixels * bpp);
-
-    // Tell the external binary to read the framebuffer and how many bytes we want.
-    setenv(MODE_ENVVAR, "FB_DATA", 1);
-    setenv(FB_BYTES_ENVVAR, bytes_str, 1);
-
-    // And then slurp the data.
-    LogD("NBridge: Executing %s", cmd);
-    FILE * from_extbin = popen(cmd, "r");
-    fread(pixbuf + pixbuf_offset, pixels * bpp, 1, from_extbin);
-    if (ferror(from_extbin) && !(feof(from_extbin))) {
-        LogE("NBridge: Error reading framebuffer data from subprocess!");
-        return 0;
-    }
-
-    // Convert all of the pixels to ARGB_8888 according to the parameters passed
-    // in from Dalvikspace. To save space and time, we do this in-place. If each
-    // pixel is fewer than four bytes, this involves shifting data like this:
-    // (lower addresses to the left, r = raw, f = formatted, two bytes per char)
-    // < -- -- -- -- r1 r2 r3 r4 >
-    // < f1 f1 -- -- r1 r2 r3 r4 >
-    // < f1 f1 f2 f2 r1 r2 r3 r4 >
-    // < f1 f1 f2 f2 f3 f3 r3 r4 >
-    // < f1 f1 f2 f2 f3 f3 f4 f4 >
-    LogD("NBridge: Converting %u pixels.", pixels);
-    struct timeval start_tv, end_tv;
-    gettimeofday(&start_tv, NULL);
-
-    uint8_t * unformatted_pixels = pixbuf + pixbuf_offset;
-    for (int i = 0; i < pixels; ++i) {
-        uint32_t pix = extractPixel(unformatted_pixels, i, bpp);
-        *(((uint32_t *)pixbuf) + i) = formatPixel(pix, offsets, sizes);
-    }
-
-    gettimeofday(&end_tv, NULL);
-    int seconds = end_tv.tv_sec - start_tv.tv_sec;
-    int useconds = end_tv.tv_usec - start_tv.tv_usec;
-    LogD("NBridge: Conversion finished in %u ms.", (seconds * 1000) + (useconds / 1000));
-
-
-    // Finally, cast pixbuf as an jint[] and convert it to a jintArray we can
-    // return to Java.
-    jintArray ret = (*env)->NewIntArray(env, pixels);
-    (*env)->SetIntArrayRegion(env, ret, 0, pixels, (jint *)pixbuf);
-    free(pixbuf);
-    LogD("NBridge: Returning data.");
-    return ret;
-}
-
-
-
 /*
  * Screenshot code for Tegra 2 devices.
  */
@@ -325,37 +257,107 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoTegra2(
     return ret;
 }
 
-jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixelsTegra2(
+
+/*
+ * Cross-type screenshot code.
+ */
+jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
         JNIEnv * env, jobject this,
-        jstring bin_location,
+        jint type,
+        jstring command_j,
         jint pixels, jint bpp,
         jintArray offsets_j, jintArray sizes_j) {
-    // fbread drops some crap before it starts talking pixels.
-    const int skip_bytes = 52;
+    if (type == TYPE_GENERIC) {
+        LogD("Getting pixels on a GENERIC device.");
+    } else if (type == TYPE_TEGRA) {
+        LogD("Getting pixels on a TEGRA device.");
+    } else {
+        LogE("What the hell am I getting pixels on?! Got type %d", type);
+    }
 
     // Extract color offsets and sizes from the Java array types.
     int offsets[4], sizes[4];
     (*env)->GetIntArrayRegion(env, offsets_j, 0, 4, offsets);
     (*env)->GetIntArrayRegion(env, sizes_j, 0, 4, sizes);
-
-    char cmd[MAX_CMD_LEN] = {0};
-    const char * fbread_path = (*env)->GetStringUTFChars(env, bin_location, 0);
-    strncpy(cmd, fbread_path, MAX_CMD_LEN - 1);
+    const char * command_const = (*env)->GetStringUTFChars(env, command_j, 0);
+    char * command = (char *)calloc(1, strlen(command_const) + 1);
+    strncpy(command, command_const, strlen(command_const));
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
-    unsigned char * pixbuf = malloc(pixels * 4);
-    int pixbuf_offset = (pixels * 4) - (pixels * bpp);
+    uint8_t * pixbuf = malloc(pixels * 4);
+    unsigned int pixbuf_offset = (pixels * 4) - (pixels * bpp);
+
+    if (type == TYPE_GENERIC) {
+        char bytes_str[MAX_BYTES_DIGITS];
+        sprintf(bytes_str, "%u", pixels * bpp);
+
+        // Tell the external binary to read the framebuffer and how many bytes we want.
+        setenv(MODE_ENVVAR, "FB_DATA", 1);
+        setenv(FB_BYTES_ENVVAR, bytes_str, 1);
+    }
 
     // And then slurp the data.
-    LogD("NBridge: Executing %s", cmd);
-    FILE * from_extbin = popen(cmd, "r");
-    // Drop the garbage into pixbuf, then clobber it with the real data.
-    fread(pixbuf + pixbuf_offset, skip_bytes, 1, from_extbin);
-    fread(pixbuf + pixbuf_offset, pixels * bpp, 1, from_extbin);
-    if (ferror(from_extbin) && !(feof(from_extbin))) {
-        LogE("NBridge: Error reading framebuffer data from subprocess!");
-        return 0;
+    char * command_path = NULL;
+    char ** command_args = NULL;
+    if (type == TYPE_GENERIC) {
+        int parts = 1;
+        char * next_space = command;
+        while (next_space != NULL) {
+            ++parts;
+            next_space = strchr(next_space + 1, ' ');
+        }
+
+        command_path = strtok(command, " ");
+        command_args = (char **)calloc(parts + 1, sizeof(char *));
+        *command_args = command_path;
+        // strtok will helpfully provide a null to terminate the array.
+        for (int i = 1; i < parts; ++i) {
+            *(command_args + i) = strtok(NULL, " ");
+        }
+    } else if (type == TYPE_TEGRA) {
+        command_path = command;
+        command_args = (char **)calloc(2, sizeof(char *));
+        *command_args = command_path;
+        *(command_args + 1) = NULL;
+    }
+
+    LogD("Executing %s with args:", command_path);
+    char ** arg = command_args + 1;
+    while (*arg != NULL) {
+        LogD("\t%s", *arg);
+        ++arg;
+    }
+
+    int bytes_read = -1;
+    int child_status;
+    int pipefd[2];
+    pipe(pipefd);
+
+    int cpid = fork();
+    if (cpid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], 1);
+        dup2(open("/dev/null", O_WRONLY), 2);
+        execv(command_path, command_args);
+    } else {
+        close(pipefd[1]);
+
+        if (type == TYPE_TEGRA) {
+            int bytes_tossed = read(pipefd[0], pixbuf, TEGRA_SKIP_BYTES);
+            if (bytes_tossed != TEGRA_SKIP_BYTES) {
+                LogE("NBridge: Error skipping fbread junk! Only tossed %d\
+                        bytes.", bytes_tossed); return 0; }
+        }
+
+        bytes_read = read(pipefd[0], pixbuf + pixbuf_offset, pixels * bpp);
+        close(pipefd[0]);
+        waitpid(cpid, &child_status, 0);
+
+        if (bytes_read != (pixels * bpp)) {
+            LogE("NBridge: Read %d bytes from child process; expected %d!",
+                    bytes_read, pixels * bpp); return 0;
+        }
     }
 
     // Convert all of the pixels to ARGB_8888 according to the parameters passed

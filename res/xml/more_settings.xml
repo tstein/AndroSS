@@ -7,6 +7,11 @@
       android:title="@string/screenshot_dir_text"
       android:summary=""
       android:dialogTitle="@string/screenshot_dir_prompt"/>
+    <EditTextPreference
+      android:key="su_path"
+      android:title="@string/su_path_text"
+      android:summary=""
+      android:dialogTitle="@string/su_path_prompt"/>
     <CheckBoxPreference
       android:key="enable_rotation"
       android:title="@string/rotation_title"

@@ -38,6 +38,10 @@
   <string name="more_settings_menu">(More) Settings</string>
   <string name="screenshot_dir_text">Save screenshots to:</string>
   <string name="screenshot_dir_prompt">Save to:</string>
+  <string name="change_output_error">Cannot write to %s. Output directory unchanged.</string>
+  <string name="su_path_text">Path to su:</string>
+  <string name="su_path_prompt">su location:</string>
+  <string name="change_su_error">Cannot use su at %s.</string>
   <string name="rotation_title">Rotate screenshots</string>
   <string name="rotation_summary">
                If checked, rotate according to screen orientation before saving. Disable this for
@@ -48,7 +52,8 @@
 
   <string name="empty_param_error">AndroSS could not initialize - problem with su?</string>
   <string name="debug_info_error">AndroSS could not initialize or has not been initialized yet. Try checking enable in the main settings.</string>
-  <string name="change_output_error">Cannot write to %s. Output directory unchanged.</string>
+  <string name="null_pixels_error">Something went horribly wrong! This is definitely a bug. :(</string>
+  <string name="null_pixels_custom_su_error">Something went wrong! su is probably misconfigured.</string>
 
   <string name="board">Board:</string>
   <string name="framebuffer_info">Framebuffer parameters:</string>
