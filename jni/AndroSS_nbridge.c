@@ -71,6 +71,49 @@ jint JNI_OnLoad(JavaVM * vm, void * reserved) {
 
 
 /**
+ * @param argv - To be passed directly to execv. argv[0] must be the full path
+ *      to the binary you want to execute.
+ * @param output_buf - The buffer in which to store the child process's output.
+ * @param buf_len - To be passed to read(). Passing 0 for this and toss_bytes
+ *      will result in no accesses being made to output_buf, making it safe to
+ *      pass NULL.
+ * @param fd - 1 and 2 are probably the only values that make sense.
+ * @param toss_bytes - Bytes to skip at the beginning of the child process's
+ *      output. It is unsafe for this to be greater than the size of your
+ *      buffer.
+ */
+static inline int execForOutput(char ** argv, uint8_t * output_buf, int buf_len,
+        int fd, int toss_bytes) {
+    int bytes_read = -1;
+    int child_status;
+    int pipefd[2];
+    pipe(pipefd);
+
+    int cpid = fork();
+    if (cpid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], fd);
+        execv(argv[0], argv);
+    }
+
+    close(pipefd[1]);
+    if (toss_bytes > 0) {
+        int bytes_tossed = read(pipefd[0], output_buf, toss_bytes);
+        if (bytes_tossed != toss_bytes) {
+            LogE("NBridge: Error skipping junk! Only tossed %d bytes.",
+                    bytes_tossed);
+            return -1;
+        }
+    }
+
+    bytes_read = read(pipefd[0], output_buf, buf_len);
+    LogD("NBridge: Read %d bytes from subprocess.", bytes_read);
+    close(pipefd[0]);
+    return waitpid(cpid, &child_status, 0);
+}
+
+
+/**
  * @param pixels - A pointer to the memory with all the pixels.
  * @param index - The desired pixel, indexed from 0.
  * @param size - The size of a pixel, in bytes.
@@ -272,6 +315,7 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
         LogD("Getting pixels on a TEGRA device.");
     } else {
         LogE("What the hell am I getting pixels on?! Got type %d", type);
+        return 0;
     }
 
     // Extract color offsets and sizes from the Java array types.
@@ -328,36 +372,8 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
         ++arg;
     }
 
-    int bytes_read = -1;
-    int child_status;
-    int pipefd[2];
-    pipe(pipefd);
-
-    int cpid = fork();
-    if (cpid == 0) {
-        close(pipefd[0]);
-        dup2(pipefd[1], 1);
-        dup2(open("/dev/null", O_WRONLY), 2);
-        execv(command_path, command_args);
-    } else {
-        close(pipefd[1]);
-
-        if (type == TYPE_TEGRA) {
-            int bytes_tossed = read(pipefd[0], pixbuf, TEGRA_SKIP_BYTES);
-            if (bytes_tossed != TEGRA_SKIP_BYTES) {
-                LogE("NBridge: Error skipping fbread junk! Only tossed %d\
-                        bytes.", bytes_tossed); return 0; }
-        }
-
-        bytes_read = read(pipefd[0], pixbuf + pixbuf_offset, pixels * bpp);
-        close(pipefd[0]);
-        waitpid(cpid, &child_status, 0);
-
-        if (bytes_read != (pixels * bpp)) {
-            LogE("NBridge: Read %d bytes from child process; expected %d!",
-                    bytes_read, pixels * bpp); return 0;
-        }
-    }
+    execForOutput(command_args, pixbuf + pixbuf_offset, pixels * bpp, 1,
+        type == TYPE_TEGRA ? TEGRA_SKIP_BYTES : 0);
 
     // Convert all of the pixels to ARGB_8888 according to the parameters passed
     // in from Dalvikspace. To save space and time, we do this in-place. If each
