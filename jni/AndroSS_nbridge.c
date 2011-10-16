@@ -117,7 +117,6 @@ static inline uint32_t formatPixel(uint32_t in, int * offsets, int * sizes) {
     uint32_t mask;
 
     for (int color = 0; color < 4; ++color) {
-        // Build the mask by repeatedly shifting and incrementing.
         mask = masks[sizes[color] - 1];
 
         // Extract the desired bits from in, then shift them up if we have
