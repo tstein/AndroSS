@@ -185,56 +185,6 @@ static inline uint32_t formatPixel(uint32_t in, int * offsets, int * sizes) {
 
 
 
-/**
- * Make a file user- and group-executable.
- *
- * @param file_location_j - The file to chmod.
- * @return True if chmod returned 0, false otherwise.
- */
-jboolean Java_net_tedstein_AndroSS_AndroSSService_chmodUPlusX(
-        JNIEnv * env, jobject this,
-        jstring file_location_j) {
-    const char * file_location =
-        (*env)->GetStringUTFChars(env, file_location_j, 0);
-    char cmd[256] = {0};
-    strncpy(cmd, "chmod 770 ", 10);
-    strncat(cmd, file_location, MAX_CMD_LEN - 10);
-
-    if (system(cmd) == 0) {
-        return JNI_TRUE;
-    } else {
-        return JNI_FALSE;
-    }
-}
-
-
-
-/*
- * Tests that need to be done in native code.
- */
-jint Java_net_tedstein_AndroSS_AndroSSService_testForSu(
-        JNIEnv * env, jobject this,
-        jstring bin_location) {
-    LogD("NBridge: Testing for su.");
-    char cmd[MAX_CMD_LEN] = {0};
-    const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
-
-    // Now change that buffer so we're ready to exec.
-    strncpy(cmd, "su -c    ", 9);
-    strncat(cmd, data_dir, MAX_CMD_LEN - 9 - 16);
-    strncat(cmd, "/AndroSS", 16);
-
-    // Tell the external binary to just return.
-    setenv(MODE_ENVVAR, "TRUE", 1);
-
-    LogD("NBridge: Executing %s", cmd);
-    int ret = system(cmd);
-    LogD("NBridge: system() returned %d.", ret);
-    return ret;
-}
-
-
-
 /*
  * Generic screenshot code for devices where we have to go root and read fb0.
  */
@@ -272,6 +222,7 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoGeneric(
     pclose(from_extbin);
     return ret;
 }
+
 
 
 /*

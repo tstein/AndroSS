@@ -2,6 +2,7 @@ package net.tedstein.AndroSS;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,8 +71,6 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Native function signatures.
-    private static native boolean chmodUPlusX(String file_location);
-    private static native int testForSu(String bin_location);
     private static native String getFBInfoGeneric(String bin_location);
     private static native String getFBInfoTegra2(String bin_location);
     private static native int[] getFBPixels(int type, String command,
@@ -224,7 +223,14 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     public static boolean canSu(Context context) {
         createExternalBinary(context);
-        int ret = testForSu(context.getFilesDir().getAbsolutePath());
+        int ret = 1;
+        try {
+            ret =
+                Runtime.getRuntime()
+                    .exec(su_path + " -c " + context.getFilesDir().getAbsolutePath() + "/AndroSS")
+                    .waitFor();
+        } catch (InterruptedException ie) {
+        } catch (IOException e) {}
         return ret == 0 ? true : false;
     }
 
@@ -422,7 +428,8 @@ public class AndroSSService extends Service implements SensorEventListener {
             FileOutputStream myfile = context.openFileOutput("AndroSS", MODE_PRIVATE);
             myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
             myfile.close();
-            chmodUPlusX(files_dir + "/AndroSS");
+            Runtime.getRuntime().exec("chmod 770 " + context.getFilesDir().getAbsolutePath()
+                                          + "/AndroSS");
         } catch (Exception e) {
             e.printStackTrace();
         }

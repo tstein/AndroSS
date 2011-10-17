@@ -120,15 +120,11 @@ int main()
 
     const char * mode_str = getenv("ANDROSS_MODE");
     if (mode_str == NULL) {
-        LogE("External: ANDROSS_MODE was not set!");
-        return 127;
+        mode_str = "";
     }
 
     int ret;
-    if (strcmp(mode_str, "TRUE") == 0) {
-        LogD("External: Running in True mode.");
-        ret = 0;
-    } else if (strcmp(mode_str, "FB_PARAMS") == 0) {
+    if (strcmp(mode_str, "FB_PARAMS") == 0) {
         LogD("External: Running in Param mode.");
         ret = writeFBParams(FD_STDOUT, fb_fd);
     } else if (strcmp(mode_str, "FB_DATA") == 0) {
@@ -137,11 +133,10 @@ int main()
         int fb_bytes = atoi(fb_bytes_str);
         ret = writeFBData(FD_STDOUT, fb_fd, fb_bytes);
     } else {
-        char errmsg[STRING_BUFFER_SIZE] = {0};
-        strcpy(errmsg, "External: Invalid ANDROSS_MODE: ");
-        strncat(errmsg, mode_str, STRING_BUFFER_SIZE - 32 - 1);
-        ret = 127;
+        LogD("External: Running in True mode.");
+        ret = 0;
     }
+
     return ret;
 }
 
