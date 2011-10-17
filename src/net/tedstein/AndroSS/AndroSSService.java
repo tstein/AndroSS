@@ -70,6 +70,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Native function signatures.
+    private static native boolean chmodUPlusX(String file_location);
     private static native int testForSu(String bin_location);
     private static native String getFBInfoGeneric(String bin_location);
     private static native String getFBInfoTegra2(String bin_location);
@@ -317,7 +318,9 @@ public class AndroSSService extends Service implements SensorEventListener {
                 this,
                 sp.getString(Prefs.SU_PATH_KEY, AndroSSService.DEFAULT_SU_PATH));
 
+        AndroSSService.files_dir = getFilesDir().getAbsolutePath();
         AndroSSService.createExternalBinary(this);
+
         String param_string;
         AndroSSService.c_offsets = new int[4];
         AndroSSService.c_sizes = new int[4];
@@ -333,7 +336,6 @@ public class AndroSSService extends Service implements SensorEventListener {
             }
 
             // Get screen info.
-            AndroSSService.files_dir = getFilesDir().getAbsolutePath();
             param_string = getFBInfoGeneric(AndroSSService.files_dir);
             if (param_string.equals("")) {
                 Log.e(TAG,"Service: Got empty param string from native!");
@@ -420,6 +422,7 @@ public class AndroSSService extends Service implements SensorEventListener {
             FileOutputStream myfile = context.openFileOutput("AndroSS", MODE_PRIVATE);
             myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
             myfile.close();
+            chmodUPlusX(files_dir + "/AndroSS");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -13,7 +13,7 @@
 
 #include "android.h"
 #define MAX_INFO_BYTES 128
-#define MAX_CMD_LEN 256
+#define MAX_CMD_LEN 255
 #define MAX_BYTES_DIGITS 16
 
 
@@ -149,10 +149,10 @@ static inline uint32_t extractPixel(uint8_t * pixels, uint32_t index, uint8_t si
 /**
  * @param in - The value of the input pixel.
  * @param offsets - An array of four bytes representing the offset of each
- * color in the input pixel. This will be interpreted as [b, g, r, a].
+ *      color in the input pixel. This will be interpreted as [b, g, r, a].
  * @param sizes - An array of four bytes representing how many bits each
- * color occupies in the input pixel. This will be interpreted as
- * [b, g, r, a].
+ *      color occupies in the input pixel. This will be interpreted as
+ *      [b, g, r, a].
  * @return The input pixel formatted as an ARGB_8888 int.
  */
 static inline uint32_t formatPixel(uint32_t in, int * offsets, int * sizes) {
@@ -185,6 +185,30 @@ static inline uint32_t formatPixel(uint32_t in, int * offsets, int * sizes) {
 
 
 
+/**
+ * Make a file user- and group-executable.
+ *
+ * @param file_location_j - The file to chmod.
+ * @return True if chmod returned 0, false otherwise.
+ */
+jboolean Java_net_tedstein_AndroSS_AndroSSService_chmodUPlusX(
+        JNIEnv * env, jobject this,
+        jstring file_location_j) {
+    const char * file_location =
+        (*env)->GetStringUTFChars(env, file_location_j, 0);
+    char cmd[256] = {0};
+    strncpy(cmd, "chmod 770 ", 10);
+    strncat(cmd, file_location, MAX_CMD_LEN - 10);
+
+    if (system(cmd) == 0) {
+        return JNI_TRUE;
+    } else {
+        return JNI_FALSE;
+    }
+}
+
+
+
 /*
  * Tests that need to be done in native code.
  */
@@ -195,16 +219,10 @@ jint Java_net_tedstein_AndroSS_AndroSSService_testForSu(
     char cmd[MAX_CMD_LEN] = {0};
     const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
 
-    // Bad things will happen if the binary isn't executable, so let's make sure
-    // it is before we try to use it.
-    strncpy(cmd, "chmod 770 ", 10);
-    strncat(cmd, data_dir, MAX_CMD_LEN - 10 - 16);
-    strncat(cmd, "/AndroSS", 16);
-    LogD("NBridge: Executing %s", cmd);
-    system(cmd);
-
     // Now change that buffer so we're ready to exec.
     strncpy(cmd, "su -c    ", 9);
+    strncat(cmd, data_dir, MAX_CMD_LEN - 9 - 16);
+    strncat(cmd, "/AndroSS", 16);
 
     // Tell the external binary to just return.
     setenv(MODE_ENVVAR, "TRUE", 1);
@@ -301,7 +319,8 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoTegra2(
 
 
 /*
- * Cross-type screenshot code.
+ * Retrieve the pixels. With appropriate arguments, this function works for all
+ * device types.
  */
 jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
         JNIEnv * env, jobject this,
