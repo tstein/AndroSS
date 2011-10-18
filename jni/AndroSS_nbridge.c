@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 #include "android.h"
-#define MAX_INFO_BYTES 128
+#define MAX_INFO_BYTES 127
 #define MAX_CMD_LEN 255
 #define MAX_BYTES_DIGITS 16
 
@@ -71,13 +71,40 @@ jint JNI_OnLoad(JavaVM * vm, void * reserved) {
 
 
 /**
+ * Transform a command line into an argv suitable for execForOutput.
+ *
+ * @param command - The full command string from Dalvikspace.
+ * @return A null-terminated char *[] to give to execForOutput.
+ */
+static inline char ** mkargv(char * command) {
+    char ** argv = NULL;
+    int parts = 0;
+    char * next_space = command;
+    while (next_space != NULL) {
+        ++parts;
+        next_space = strchr(next_space + 1, ' ');
+    }
+
+    argv = (char **)calloc(parts + 1, sizeof(char *));
+    // strtok will helpfully provide a null to terminate the array.
+    for (int i = 0; i <= parts; ++i) {
+        *(argv + i) = strtok(i == 0 ? command : NULL, " ");
+    }
+
+    return argv;
+}
+
+
+
+/**
  * @param argv - To be passed directly to execv. argv[0] must be the full path
  *      to the binary you want to execute.
  * @param output_buf - The buffer in which to store the child process's output.
  * @param buf_len - To be passed to read(). Passing 0 for this and toss_bytes
  *      will result in no accesses being made to output_buf, making it safe to
  *      pass NULL.
- * @param fd - 1 and 2 are probably the only values that make sense.
+ * @param fd - The fd on the child process from which to capture output. 1 and 2
+ *      are probably the only values that make sense.
  * @param toss_bytes - Bytes to skip at the beginning of the child process's
  *      output. It is unsafe for this to be greater than the size of your
  *      buffer.
@@ -88,6 +115,13 @@ static inline int execForOutput(char ** argv, uint8_t * output_buf, int buf_len,
     int child_status;
     int pipefd[2];
     pipe(pipefd);
+
+    LogD("Nbridge: Executing %s with args:", argv[0]);
+    char ** arg = argv + 1;
+    while (*arg != NULL) {
+        LogD("\t%s", *arg);
+        ++arg;
+    }
 
     int cpid = fork();
     if (cpid == 0) {
@@ -186,87 +220,40 @@ static inline uint32_t formatPixel(uint32_t in, int * offsets, int * sizes) {
 
 
 /*
- * Generic screenshot code for devices where we have to go root and read fb0.
+ * Retrieve the physical parameters of the framebuffer. With appropriate
+ * arguments, this function works for all device types.
  */
-jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoGeneric(
+jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
         JNIEnv * env, jobject this,
-        jstring bin_location) {
-    char strbuf[MAX_INFO_BYTES] = {0};
-    jstring ret = (*env)->NewStringUTF(env, strbuf);
-    char cmd[MAX_CMD_LEN] = {0};
-    const char * data_dir = (*env)->GetStringUTFChars(env, bin_location, 0);
-
-    // Bad things will happen if the binary isn't executable, so let's make sure
-    // it is before we try to use it.
-    strncpy(cmd, "chmod 770 ", 10);
-    strncat(cmd, data_dir, MAX_CMD_LEN - 10 - 16);
-    strncat(cmd, "/AndroSS", 16);
-    LogD("NBridge: Executing %s", cmd);
-    system(cmd);
-
-    // Now change that buffer so we're ready to exec.
-    strncpy(cmd, "su -c    ", 9);
-
-    // Tell the external binary we want info about the framebuffer.
-    setenv(MODE_ENVVAR, "FB_PARAMS", 1);
-
-    LogD("NBridge: Executing %s", cmd);
-    FILE * from_extbin = popen(cmd, "r");
-    int bytes_read = fread(strbuf, MAX_INFO_BYTES, 1, from_extbin);
-    if (ferror(from_extbin)) {
-        LogE("Nbridge: Error reading from subprocess!");
+        jint type,
+        jstring command_j) {
+    if (type == TYPE_GENERIC) {
+        LogD("NBridge: Getting info on a generic device.");
+    } else if (type == TYPE_TEGRA) {
+        LogD("NBridge: Getting info on a Tegra device.");
     } else {
-        LogD("NBridge: Read %d bytes from subprocess.", bytes_read);
-        ret = (*env)->NewStringUTF(env, strbuf);
+        LogE("NBridge: What the hell am I getting info on?! Got type %d", type);
+        return 0;
     }
-    pclose(from_extbin);
-    return ret;
+
+    const char * command_const = (*env)->GetStringUTFChars(env, command_j, 0);
+    char * command = (char *)calloc(strlen(command_const) + 1, sizeof(char));
+    strncpy(command, command_const, strlen(command_const));
+    char ** argv = mkargv(command);
+    char * buf = (char *)calloc(MAX_INFO_BYTES + 1, sizeof(char));
+
+    int fd = 1;
+    if (type == TYPE_GENERIC) {
+        setenv(MODE_ENVVAR, "FB_PARAMS", 1);
+    } else if (type == TYPE_TEGRA) {
+        fd = 2; // fbread spits out params on stderr.
+    }
+
+    execForOutput(argv, (uint8_t *)buf, MAX_INFO_BYTES, fd, 0);
+    LogD("NBridge: Got param string: %s", buf);
+    return (*env)->NewStringUTF(env, buf);
 }
 
-
-
-/*
- * Screenshot code for Tegra 2 devices.
- */
-jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfoTegra2(
-        JNIEnv * env, jobject this,
-        jstring bin_location) {
-    char * strbuf = (char *)calloc(1, MAX_INFO_BYTES);
-    jstring ret = (*env)->NewStringUTF(env, strbuf);
-
-    const char * fbread_path_const = (*env)->GetStringUTFChars(env, bin_location, 0);
-    char * fbread_path = (char *)calloc(1, MAX_CMD_LEN);
-    strncpy(fbread_path, fbread_path_const, MAX_CMD_LEN - 1);
-
-    char ** fbread_args = (char **)calloc(2, sizeof(char *));
-    *fbread_args = fbread_path;
-    *(fbread_args + 1) = 0;
-
-    int bytes_read = -1;
-    int pipefd[2];
-    int child_status;
-
-    pipe(pipefd);
-    LogD("NBridge: About to fork+exec for framebuffer info.");
-    int cpid = fork();
-    if (cpid == 0) {
-        LogD("NBridge2: Child here!");
-        close(pipefd[0]);
-        LogD(fbread_path);
-        dup2(pipefd[1], 2);
-        dup2(open("/dev/null", O_WRONLY), 1);
-        execv(fbread_path, fbread_args);
-    }
-    LogD("NBridge: Parent here! Child pid is %d", cpid);
-    close(pipefd[1]);
-    bytes_read = read(pipefd[0], strbuf, MAX_INFO_BYTES - 1);
-    close(pipefd[0]);
-    waitpid(cpid, &child_status, 0);
-
-    LogD("NBridge: read %d bytes from child: %s", bytes_read, strbuf);
-    ret = (*env)->NewStringUTF(env, strbuf);
-    return ret;
-}
 
 
 /*
@@ -280,11 +267,12 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
         jint pixels, jint bpp,
         jintArray offsets_j, jintArray sizes_j) {
     if (type == TYPE_GENERIC) {
-        LogD("Getting pixels on a GENERIC device.");
+        LogD("NBridge: Getting pixels on a generic device.");
     } else if (type == TYPE_TEGRA) {
-        LogD("Getting pixels on a TEGRA device.");
+        LogD("NBridge: Getting pixels on a Tegra device.");
     } else {
-        LogE("What the hell am I getting pixels on?! Got type %d", type);
+        LogE("NBridge: What the hell am I getting pixels on?! Got type %d",
+                type);
         return 0;
     }
 
@@ -293,8 +281,10 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     (*env)->GetIntArrayRegion(env, offsets_j, 0, 4, offsets);
     (*env)->GetIntArrayRegion(env, sizes_j, 0, 4, sizes);
     const char * command_const = (*env)->GetStringUTFChars(env, command_j, 0);
-    char * command = (char *)calloc(1, strlen(command_const) + 1);
+    char * command = (char *)calloc(strlen(command_const) + 1, sizeof(char));
     strncpy(command, command_const, strlen(command_const));
+    LogD("command_const (%d): %s", strlen(command_const), command_const);
+    LogD("command       (%d): %s", strlen(command), command);
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
@@ -311,38 +301,8 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     }
 
     // And then slurp the data.
-    char * command_path = NULL;
-    char ** command_args = NULL;
-    if (type == TYPE_GENERIC) {
-        int parts = 1;
-        char * next_space = command;
-        while (next_space != NULL) {
-            ++parts;
-            next_space = strchr(next_space + 1, ' ');
-        }
-
-        command_path = strtok(command, " ");
-        command_args = (char **)calloc(parts + 1, sizeof(char *));
-        *command_args = command_path;
-        // strtok will helpfully provide a null to terminate the array.
-        for (int i = 1; i < parts; ++i) {
-            *(command_args + i) = strtok(NULL, " ");
-        }
-    } else if (type == TYPE_TEGRA) {
-        command_path = command;
-        command_args = (char **)calloc(2, sizeof(char *));
-        *command_args = command_path;
-        *(command_args + 1) = NULL;
-    }
-
-    LogD("Executing %s with args:", command_path);
-    char ** arg = command_args + 1;
-    while (*arg != NULL) {
-        LogD("\t%s", *arg);
-        ++arg;
-    }
-
-    execForOutput(command_args, pixbuf + pixbuf_offset, pixels * bpp, 1,
+    char ** argv = mkargv(command);
+    execForOutput(argv, pixbuf + pixbuf_offset, pixels * bpp, 1,
         type == TYPE_TEGRA ? TEGRA_SKIP_BYTES : 0);
 
     // Convert all of the pixels to ARGB_8888 according to the parameters passed

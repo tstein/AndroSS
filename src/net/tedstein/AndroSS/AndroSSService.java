@@ -60,6 +60,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     // Service state.
     private static boolean initialized = false;
     private static String output_dir = DEFAULT_OUTPUT_DIR;
+    private static String command;
     private static String su_path = DEFAULT_SU_PATH;
     private static long last_shake_event = 0;
     private static float old_x = 0;
@@ -71,8 +72,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
 
     // Native function signatures.
-    private static native String getFBInfoGeneric(String bin_location);
-    private static native String getFBInfoTegra2(String bin_location);
+    private static native String getFBInfo(int type, String command);
     private static native int[] getFBPixels(int type, String command,
             int pixels, int bpp,
             int[] offsets, int[] sizes);
@@ -196,6 +196,7 @@ public class AndroSSService extends Service implements SensorEventListener {
             spe.commit();
 
             AndroSSService.su_path = new_su;
+            updateCommand();
             Log.d(TAG, "Service: Updated su path to: " + new_su);
             return true;
         } else {
@@ -215,7 +216,7 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     public static String getParamString() {
         if (AndroSSService.initialized) {
-            return getFBInfoGeneric(AndroSSService.files_dir);
+            return getFBInfo(getDeviceType().ordinal(), command);
         } else {
             return "";
         }
@@ -307,42 +308,51 @@ public class AndroSSService extends Service implements SensorEventListener {
     }
 
 
+    private static void updateCommand() {
+        switch (AndroSSService.getDeviceType()) {
+        case UNKNOWN:
+            throw new IllegalStateException(
+                "Service: Cannot call updateCommand() before setting a device type!");
+        case GENERIC:
+            AndroSSService.command = AndroSSService.su_path + " -c " + files_dir + "/AndroSS";
+            break;
+        case TEGRA_2:
+            AndroSSService.command = AndroSSService.fbread_path;
+            break;
+        }
+    }
+
+
     private boolean init() {
         // Some kind of locking would be more correct, though I'm not sure I see anything that can
         // go wrong other than some wasted cycles.
 
-        // Set up SharedPreferences.
         initSharedPreferences(this);
 
-        // Configure the output directory.
+        // Configure necessary directories.
         AndroSSService.setOutputDir(
                 this,
                 sp.getString(Prefs.OUTPUT_DIR_KEY, AndroSSService.DEFAULT_OUTPUT_DIR));
-
-        // Configure su.
-        AndroSSService.setSuPath(
-                this,
-                sp.getString(Prefs.SU_PATH_KEY, AndroSSService.DEFAULT_SU_PATH));
-
         AndroSSService.files_dir = getFilesDir().getAbsolutePath();
-        AndroSSService.createExternalBinary(this);
 
         String param_string;
         AndroSSService.c_offsets = new int[4];
         AndroSSService.c_sizes = new int[4];
+
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
-            // Create the AndroSS external binary.
-            try {
-                FileOutputStream myfile = openFileOutput("AndroSS", MODE_PRIVATE);
-                myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
-                myfile.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            // Configure su.
+            AndroSSService.setSuPath(
+                    this,
+                    sp.getString(Prefs.SU_PATH_KEY, AndroSSService.DEFAULT_SU_PATH));
 
-            // Get screen info.
-            param_string = getFBInfoGeneric(AndroSSService.files_dir);
+            // Create the AndroSS external binary.
+            AndroSSService.createExternalBinary(this);
+
+            updateCommand();
+            param_string = getFBInfo(DeviceType.GENERIC.ordinal(), AndroSSService.command);
+
+            // Parse screen info.
             if (param_string.equals("")) {
                 Log.e(TAG,"Service: Got empty param string from native!");
                 Toast.makeText(this,
@@ -371,7 +381,8 @@ public class AndroSSService extends Service implements SensorEventListener {
             }
             break;
         case TEGRA_2:
-            param_string = getFBInfoTegra2(AndroSSService.fbread_path);
+            param_string = getFBInfo(DeviceType.TEGRA_2.ordinal(), AndroSSService.command);
+
             Pattern p = Pattern.compile(".*size\\s+(\\d+)x(\\d+)\\s+format\\s+(\\d+).*");
             Matcher m = p.matcher(param_string);
             if (m.matches() == false) {
