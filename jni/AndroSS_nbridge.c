@@ -283,8 +283,6 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     const char * command_const = (*env)->GetStringUTFChars(env, command_j, 0);
     char * command = (char *)calloc(strlen(command_const) + 1, sizeof(char));
     strncpy(command, command_const, strlen(command_const));
-    LogD("command_const (%d): %s", strlen(command_const), command_const);
-    LogD("command       (%d): %s", strlen(command), command);
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
