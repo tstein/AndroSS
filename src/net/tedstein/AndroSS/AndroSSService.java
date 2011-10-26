@@ -1,6 +1,7 @@
 package net.tedstein.AndroSS;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
@@ -480,10 +481,8 @@ public class AndroSSService extends Service implements SensorEventListener {
             }
             os.flush();
             os.close();
-        } catch (Exception e) {
-            Log.e(TAG, "Service: Oh god what");
-            Log.e(TAG, e.getMessage());
-        }
+        } catch (FileNotFoundException fnfe) {
+        } catch (IOException ioe) {}
 
         return success;
     }
