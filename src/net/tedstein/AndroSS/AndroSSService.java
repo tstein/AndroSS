@@ -321,6 +321,8 @@ public class AndroSSService extends Service implements SensorEventListener {
             AndroSSService.command = AndroSSService.fbread_path;
             break;
         }
+
+        Log.d(TAG, "Service: Updated command to: " + command);
     }
 
 
@@ -340,6 +342,8 @@ public class AndroSSService extends Service implements SensorEventListener {
         AndroSSService.c_offsets = new int[4];
         AndroSSService.c_sizes = new int[4];
 
+        updateCommand();
+
         switch (AndroSSService.getDeviceType()) {
         case GENERIC:
             // Configure su.
@@ -350,7 +354,6 @@ public class AndroSSService extends Service implements SensorEventListener {
             // Create the AndroSS external binary.
             AndroSSService.createExternalBinary(this);
 
-            updateCommand();
             param_string = getFBInfo(DeviceType.GENERIC.ordinal(), AndroSSService.command);
 
             // Parse screen info.

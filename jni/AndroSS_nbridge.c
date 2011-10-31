@@ -116,7 +116,7 @@ static inline int execForOutput(char ** argv, uint8_t * output_buf, int buf_len,
     int pipefd[2];
     pipe(pipefd);
 
-    LogD("Nbridge: Executing %s with args:", argv[0]);
+    LogD("NBridge: Reading fd %d from %s with args:", fd, argv[0]);
     char ** arg = argv + 1;
     while (*arg != NULL) {
         LogD("\t%s", *arg);
@@ -137,11 +137,13 @@ static inline int execForOutput(char ** argv, uint8_t * output_buf, int buf_len,
             LogE("NBridge: Error skipping junk! Only tossed %d bytes.",
                     bytes_tossed);
             return -1;
+        } else {
+            LogD("NBridge: Skipped %d bytes.", bytes_tossed);
         }
     }
 
     bytes_read = read(pipefd[0], output_buf, buf_len);
-    LogD("NBridge: Read %d bytes from subprocess.", bytes_read);
+    LogD("NBridge: Read %d of %d bytes from subprocess.", bytes_read, buf_len);
     close(pipefd[0]);
     return waitpid(cpid, &child_status, 0);
 }
@@ -237,6 +239,7 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
     }
 
     const char * command_const = (*env)->GetStringUTFChars(env, command_j, 0);
+    LogD("NBridge: Got command %s", command_const);
     char * command = (char *)calloc(strlen(command_const) + 1, sizeof(char));
     strncpy(command, command_const, strlen(command_const));
     char ** argv = mkargv(command);
