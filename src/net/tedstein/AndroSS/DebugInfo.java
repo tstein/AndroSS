@@ -13,10 +13,10 @@ public class DebugInfo extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String param_string = AndroSSService.getParamString();
+        String param_string = AndroSSService.getParamString(this);
         TextView board;
 
-        switch (AndroSSService.getDeviceType()) {
+        switch (AndroSSService.getDeviceType(this)) {
         case GENERIC:
             setContentView(R.layout.debug_info);
 

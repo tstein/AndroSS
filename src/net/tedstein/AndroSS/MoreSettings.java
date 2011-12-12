@@ -87,7 +87,7 @@ public class MoreSettings extends PreferenceActivity {
         });
 
         Preference retry_root_check = mPreferenceManager.findPreference("retry_root_check");
-        if (AndroSSService.getDeviceType() != DeviceType.GENERIC) {
+        if (AndroSSService.getDeviceType(this) != DeviceType.GENERIC) {
             retry_root_check.setEnabled(false);
         }
         retry_root_check.setOnPreferenceClickListener(new OnPreferenceClickListener() {

@@ -197,7 +197,7 @@ public class AndroSSService extends Service implements SensorEventListener {
             spe.commit();
 
             AndroSSService.su_path = new_su;
-            updateCommand();
+            updateCommand(context);
             Log.d(TAG, "Service: Updated su path to: " + new_su);
             return true;
         } else {
@@ -215,9 +215,9 @@ public class AndroSSService extends Service implements SensorEventListener {
         spe.commit();
     }
 
-    public static String getParamString() {
+    public static String getParamString(Context context) {
         if (AndroSSService.initialized) {
-            return getFBInfo(getDeviceType().ordinal(), command);
+            return getFBInfo(getDeviceType(context).ordinal(), command);
         } else {
             return "";
         }
@@ -236,10 +236,10 @@ public class AndroSSService extends Service implements SensorEventListener {
         return ret == 0 ? true : false;
     }
 
-    public static DeviceType getDeviceType() {
+    public static DeviceType getDeviceType(Context context) {
         if (AndroSSService.dev_type == DeviceType.UNKNOWN) {
             Log.d(TAG, "Service: Don't know what kind of device we're on...");
-            if (getOpenGLVendor().toLowerCase().contains("nvidia")) {
+            if (getOpenGLVendor(context).toLowerCase().contains("nvidia")) {
                 Log.d(TAG, "Service: This is a Tegra 2-based device.");
                 AndroSSService.dev_type = DeviceType.TEGRA_2;
             } else {
@@ -252,11 +252,14 @@ public class AndroSSService extends Service implements SensorEventListener {
     }
 
     public static void setOpenGLVendor(String vendor) {
+        spe.putString(Prefs.GL_VENDOR_KEY, vendor);
+        spe.commit();
         AndroSSService.opengl_vendor = vendor;
     }
 
-    public static String getOpenGLVendor() {
-        return AndroSSService.opengl_vendor;
+    public static String getOpenGLVendor(Context context) {
+        initSharedPreferences(context);
+        return sp.getString(Prefs.GL_VENDOR_KEY, "unknown");
     }
 
 
@@ -309,8 +312,8 @@ public class AndroSSService extends Service implements SensorEventListener {
     }
 
 
-    private static void updateCommand() {
-        switch (AndroSSService.getDeviceType()) {
+    private static void updateCommand(Context context) {
+        switch (AndroSSService.getDeviceType(context)) {
         case UNKNOWN:
             throw new IllegalStateException(
                 "Service: Cannot call updateCommand() before setting a device type!");
@@ -342,9 +345,9 @@ public class AndroSSService extends Service implements SensorEventListener {
         AndroSSService.c_offsets = new int[4];
         AndroSSService.c_sizes = new int[4];
 
-        updateCommand();
+        updateCommand(this);
 
-        switch (AndroSSService.getDeviceType()) {
+        switch (AndroSSService.getDeviceType(this)) {
         case GENERIC:
             // Configure su.
             AndroSSService.setSuPath(
@@ -565,7 +568,7 @@ public class AndroSSService extends Service implements SensorEventListener {
         int[] pixels = {0};
         String command = "";
 
-        switch (AndroSSService.getDeviceType()) {
+        switch (AndroSSService.getDeviceType(this)) {
         case GENERIC:
             command =
                 AndroSSService.getSuPath(this) + " -c " + AndroSSService.files_dir + "/AndroSS";
@@ -574,7 +577,7 @@ public class AndroSSService extends Service implements SensorEventListener {
             command = fbread_path;
             break;
         }
-        pixels = getFBPixels(getDeviceType().ordinal(), command,
+        pixels = getFBPixels(getDeviceType(this).ordinal(), command,
                     screen_width * screen_height, bpp,
                     c_offsets, c_sizes);
 

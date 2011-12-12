@@ -63,7 +63,7 @@ public class ConfigurationActivity extends Activity {
         super.onCreate(savedInstanceState);
         // If vendor is unknown, we need to check that. We'll do the root check
         // in onActivityResult() if this isn't a Tegra device.
-        if (AndroSSService.getOpenGLVendor().equals("unknown")) {
+        if (AndroSSService.getOpenGLVendor(this).equals("unknown")) {
             this.started_other_activity = true;
             Intent i = new Intent(this, GLDetector.class);
             startActivityForResult(i, 0);
@@ -262,7 +262,7 @@ public class ConfigurationActivity extends Activity {
         SharedPreferences sp = getSharedPreferences(Prefs.PREFS_NAME, MODE_PRIVATE);
         AndroSSService.setOpenGLVendor(data.getStringExtra(GLDetector.VENDOR_EXTRA));
 
-        mDeviceType = AndroSSService.getDeviceType();
+        mDeviceType = AndroSSService.getDeviceType(this);
         if (mDeviceType == DeviceType.GENERIC &&
             sp.getBoolean(Prefs.HAVE_TESTED_ROOT_KEY, false) == false) {
             Log.d(TAG, "Activity: Don't know if we have root; showing dialog.");
