@@ -111,8 +111,6 @@ static inline char ** mkargv(char * command) {
  */
 static inline int execForOutput(char ** argv, uint8_t * output_buf, int buf_len,
         int fd, int toss_bytes) {
-    int bytes_read = -1;
-    int child_status;
     int pipefd[2];
     pipe(pipefd);
 
@@ -142,8 +140,26 @@ static inline int execForOutput(char ** argv, uint8_t * output_buf, int buf_len,
         }
     }
 
-    bytes_read = read(pipefd[0], output_buf, buf_len);
-    LogD("NBridge: Read %d of %d bytes from subprocess.", bytes_read, buf_len);
+    int bytes_read = 0;
+    int reads = 0;
+    int child_status = -1;
+    while (bytes_read < buf_len) {
+        int bytes_read_this_time = read(pipefd[0], output_buf + bytes_read,
+                buf_len - bytes_read);
+        if (bytes_read_this_time < 0) {
+            char * errmsg = strerror(errno);
+            LogE("NBridge: Error while reading from subprocess:");
+            LogE(errmsg);
+            return 255;
+        }
+
+        if (bytes_read_this_time == 0) {
+            break;
+        }
+        bytes_read += bytes_read_this_time;
+        reads++;
+    }
+    LogD("NBridge: Read %d of %d bytes from subprocess with %d reads.", bytes_read, buf_len, reads);
     close(pipefd[0]);
     return waitpid(cpid, &child_status, 0);
 }
