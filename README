@@ -36,11 +36,11 @@
   ###########################################################################
   ###########################################################################
 
-AndroSS is a screenshot program for rooted Android phones. Taking accurate
-screenshots requires fast code, so I've written this project to try to go from
-trigger to having the pixels in memory as fast as possible. On an idle device
-with a 1 GHz processor, AndroSS can do it in around a fifth of a second, and can
-probably be improved significantly if that latency ever becomes a problem.
+AndroSS is a screenshot program for rooted and Tegra-based Android phones.
+Taking accurate screenshots requires fast code, so I've written this project to
+try to go from trigger to having the pixels in memory as fast as possible. On an
+idle device with a 1 GHz processor, AndroSS can do it in around a fifth of a
+second.
 
 If you are building this yourself, be sure to read the file called BUILDING. It
 may work if you just clone and import into Eclipse, but no guarantees if you
