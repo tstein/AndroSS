@@ -423,6 +423,8 @@ public class AndroSSService extends Service implements SensorEventListener {
                 }
                 break;
             }
+            AndroSSService.fb_stride =
+                AndroSSService.screen_width * (AndroSSService.screen_depth / 8);
             break;
         }
 
