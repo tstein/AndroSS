@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">AndroSS</string>
+  <string name="ServiceStatusCheckBox_text">Запустить</string>
+  <string name="PersistenceCheckBox_text">Не выгружать программу после снимка</string>
+
+  <string name="compression_text">Метод сжатия:</string>
+  <string-array name="compression_types">
+    <item>PNG (качественно; медленно)</item>
+    <item>JPG HQ (90% качества; быстрее)</item>
+    <item>JPG fast (40% качества; скоростной)</item>
+  </string-array>
+
+  <string name="notifications_text">Уведомление:</string>
+  <string name="toast_notify_text">всплывающее окно</string>
+  <string name="audio_notify_text">звук</string>
+  <string name="vibe_notify_text">вибрация</string>
+
+  <string name="triggers_text">Скриншот при...</string>
+  <string name="camera_button_trigger_text">нажатии аппаратной кнопки камеры</string>
+  <string name="shake_trigger_text">встряхивании</string>
+
+  <string name="root_test_message_title">Проверить root-права</string>
+  <string name="root_test_message">
+               AndroSS необходимы root-права для работы, давайте проверим, настроены ли они должным
+               образом. Это всего лишь тест, но если Вы внесете AndroSS в белый список сейчас, Ваша
+               SU-программа, вероятно, больше не будет беспокоить Вас.</string>
+  <string name="root_test_message_neutral">Проверить!</string>
+
+  <string name="root_test_failed_message_title">Ошибка!</string>
+  <string name="root_test_failed_message">
+               AndroSS по какой-либо причине не смог получить доступ к root-правам. Root-права необходимы
+               для корректной работы программы на вашем устройстве. Вы можете повторить проверку позже в меню настроек.
+               \n\nЕсли Вы считаете, что произошла ошибка, и имеете пару свободных минут, пожалуйста, свяжитесь
+               со мной любым из способов, указаных на странице AndroSS в Маркете (на Английском языке).</string>
+  <string name="root_test_failed_message_neutral">Ой! :(</string>
+
+  <string name="more_settings_menu">Настройки, опции</string>
+  <string name="screenshot_dir_text">Сохранять скриншоты в:</string>
+  <string name="screenshot_dir_prompt">Укажите путь:</string>
+  <string name="change_output_error">Невозможно сохранить в %s. Папка не выбрана.</string>
+  <string name="su_path_text">Путь к SU:</string>
+  <string name="su_path_prompt">Местоположение SU:</string>
+  <string name="change_su_error">Не обнаружен SU в %s.</string>
+  <string name="rotation_title">Вращать скриншоты</string>
+  <string name="rotation_summary">
+               Включите для поворота снимка согласно ориентации экрана перед сохранением. Отключите
+               для повышения быстродействия.</string>
+
+  <string name="retry_root_check">Повторно проверить root-права</string>
+  <string name="goto_debug_prompt">Отладочная информация</string>
+
+  <string name="empty_param_error">AndroSS не запущена - проблема с root-правами?</string>
+  <string name="debug_info_error">AndroSS не запущена или не может быть запущена сейчас. Попробуйте повторно запустить программу в главном меню.</string>
+  <string name="null_pixels_error">Критическая ошибка! Это баг :(</string>
+  <string name="null_pixels_custom_su_error">Ошибка! Проверьте доступ к root-правам.</string>
+
+  <string name="board">Платформа:</string>
+  <string name="framebuffer_info">Framebuffer parameters:</string>
+  <string name="width_label">width</string>
+  <string name="height_label">height</string>
+  <string name="depth_label">depth</string>
+  <string name="stride_label">stride</string>
+  <string name="red">red</string>
+  <string name="green">green</string>
+  <string name="blue">blue</string>
+  <string name="alpha">alpha</string>
+  <string name="color_param">%1$s\t\t\t\t%2$s bits at offset %3$s</string>
+</resources>
+
