@@ -382,10 +382,6 @@ public class AndroSSService extends Service implements SensorEventListener {
             }
 
             AndroSSService.fb_stride = Integer.parseInt(params[11]);
-            if (fb_stride != AndroSSService.screen_width * (AndroSSService.screen_depth / 8)) {
-                Log.w(TAG, "Service: stride != width * depth! Assuming depth = stride / width.");
-                AndroSSService.screen_depth = (fb_stride / AndroSSService.screen_width) * 8;
-            }
             break;
         case TEGRA_2:
             param_string = getFBInfo(DeviceType.TEGRA_2.ordinal(), AndroSSService.command);
