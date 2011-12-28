@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="app_name">AndroSS</string>
-  <string name="ServiceStatusCheckBox_text">Enabled?</string>
-  <string name="PersistenceCheckBox_text">Stay enabled after each shot?</string>
+  <string name="ServiceStatusCheckBox_text">Aktivert?</string>
+  <string name="PersistenceCheckBox_text">Forbli aktivert?</string>
 
-  <string name="compression_text">Compression level:</string>
+  <string name="compression_text">Komprimeringsnivå:</string>
   <string-array name="compression_types">
-    <item>PNG (best; slow)</item>
-    <item>JPG HQ (90% quality; fast)</item>
-    <item>JPG fast (40% quality; faster)</item>
+    <item>PNG (best; treg)</item>
+    <item>JPG HQ (90%; rask)</item>
+    <item>JPG fast (40%; raskest)</item>
   </string-array>
 
-  <string name="notifications_text">Feedback:</string>
-  <string name="toast_notify_text">toast popup</string>
-  <string name="audio_notify_text">sound</string>
-  <string name="vibe_notify_text">vibration</string>
+  <string name="notifications_text">Vanlig varsel:</string>
+  <string name="toast_notify_text">Meldingsvindu</string>
+  <string name="audio_notify_text">Lyd</string>
+  <string name="vibe_notify_text">Vibrering</string>
 
-  <string name="triggers_text">Trigger on...</string>
-  <string name="camera_button_trigger_text">hardware camera button?</string>
-  <string name="shake_trigger_text">shake?</string>
+  <string name="triggers_text">Utløses på...</string>
+  <string name="camera_button_trigger_text">Kameraknapp?</string>
+  <string name="shake_trigger_text">Riste telefonen?</string>
 
-  <string name="root_test_message_title">Checking for root</string>
+  <string name="root_test_message_title">Sjekker etter root-tilgang</string>
   <string name="root_test_message">
-               AndroSS needs root to work, so let\'s see if you\'re set up properly. This is just a
-               simple test, but if you whitelist us now, your su program probably won\'t bother you
-               again.</string>
-  <string name="root_test_message_neutral">Let\'s do this!</string>
+               AndroSS trenger root-tilgang for å fungere, så la oss se om du har har det. 
+               Dette er bare en enkel test, men hvis du godkjenner applikasjonen nå, vil du ikke
+               bli spurt igjen.</string>
+  <string name="root_test_message_neutral">La oss sjekke etter root-tilgang!</string>
 
-  <string name="root_test_failed_message_title">Root test failed</string>
+  <string name="root_test_failed_message_title">Root testen feilet</string>
   <string name="root_test_failed_message">
                Something went wrong when trying to use su. AndroSS needs root to work correctly on
                your device. You can retry this check at any time from (More) Settings in the menu.
