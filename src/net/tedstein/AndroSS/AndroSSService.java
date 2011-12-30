@@ -75,7 +75,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     // Native function signatures.
     private static native String getFBInfo(int type, String command);
     private static native int[] getFBPixels(int type, String command,
-            int pixels, int bpp,
+            int height, int width, int bpp, int stride,
             int[] offsets, int[] sizes);
 
 
@@ -576,7 +576,7 @@ public class AndroSSService extends Service implements SensorEventListener {
             break;
         }
         pixels = getFBPixels(getDeviceType(this).ordinal(), command,
-                    screen_width * screen_height, bpp,
+                    screen_height, screen_width, bpp, fb_stride,
                     c_offsets, c_sizes);
 
         long get_pixels_time = Calendar.getInstance().getTimeInMillis() - start_time.getTimeInMillis();

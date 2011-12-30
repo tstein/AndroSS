@@ -240,6 +240,11 @@ static inline uint32_t formatPixel(uint32_t in, int * offsets, int * sizes) {
 /*
  * Retrieve the physical parameters of the framebuffer. With appropriate
  * arguments, this function works for all device types.
+ *
+ * @param type Device type. Consistent with AndroSSService.DeviceType.
+ * @param command_j The full command to run.
+ * @return A string describing the parameters of the framebuffer. See AndroSS.c
+ *  for the ABI.
  */
 jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
         JNIEnv * env, jobject this,
@@ -278,12 +283,22 @@ jstring Java_net_tedstein_AndroSS_AndroSSService_getFBInfo(
 /*
  * Retrieve the pixels. With appropriate arguments, this function works for all
  * device types.
+ *
+ * @param type Device type. Consistent with AndroSSService.DeviceType.
+ * @param command_j The full command to run.
+ * @param height Framebuffer height.
+ * @param width Framebuffer width.
+ * @param bpp Framebuffer depth in bytes per pixel.
+ * @param stride Framebuffer stride.
+ * @param offsets_j Color offsets within each pixel.
+ * @param sizes_j Color sizes within each pixel.
+ * @return A (width * height) array of ARGB_8888 pixels.
  */
 jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
         JNIEnv * env, jobject this,
         jint type,
         jstring command_j,
-        jint pixels, jint bpp,
+        jint height, jint width, jint bpp, jint stride,
         jintArray offsets_j, jintArray sizes_j) {
     if (type == TYPE_GENERIC) {
         LogD("NBridge: Getting pixels on a generic device.");
@@ -305,12 +320,13 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 
     // Allocate enough space to store all pixels in ARGB_8888. We'll initially
     // put the pixels at the highest address within our buffer they can fit.
-    uint8_t * pixbuf = malloc(pixels * 4);
-    unsigned int pixbuf_offset = (pixels * 4) - (pixels * bpp);
+    int pixbuf_size = height * ((stride > width * 4) ? stride : width * 4);
+    uint8_t * pixbuf = malloc(pixbuf_size);
+    unsigned int pixbuf_offset = pixbuf_size - (stride * height);
 
     if (type == TYPE_GENERIC) {
         char bytes_str[MAX_BYTES_DIGITS];
-        sprintf(bytes_str, "%u", pixels * bpp);
+        sprintf(bytes_str, "%u", stride * height);
 
         // Tell the external binary to read the framebuffer and how many bytes we want.
         setenv(MODE_ENVVAR, "FB_DATA", 1);
@@ -319,7 +335,7 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
 
     // And then slurp the data.
     char ** argv = mkargv(command);
-    execForOutput(argv, pixbuf + pixbuf_offset, pixels * bpp, 1,
+    execForOutput(argv, pixbuf + pixbuf_offset, stride * height, 1,
         type == TYPE_TEGRA ? TEGRA_SKIP_BYTES : 0);
 
     // Convert all of the pixels to ARGB_8888 according to the parameters passed
@@ -331,14 +347,18 @@ jintArray Java_net_tedstein_AndroSS_AndroSSService_getFBPixels(
     // < f1 f1 f2 f2 r1 r2 r3 r4 >
     // < f1 f1 f2 f2 f3 f3 r3 r4 >
     // < f1 f1 f2 f2 f3 f3 f4 f4 >
+    int pixels = width * height;
     LogD("NBridge: Converting %u pixels.", pixels);
     struct timeval start_tv, end_tv;
     gettimeofday(&start_tv, NULL);
 
     uint8_t * unformatted_pixels = pixbuf + pixbuf_offset;
-    for (int i = 0; i < pixels; ++i) {
-        uint32_t pix = extractPixel(unformatted_pixels, i, bpp);
-        *(((uint32_t *)pixbuf) + i) = formatPixel(pix, offsets, sizes);
+    for (int i = 0; i < height; ++i) {
+        uint8_t * unformatted_line = unformatted_pixels + (i * stride);
+        for (int j = 0; j < width; ++j) {
+            uint32_t pix = extractPixel(unformatted_line, j, bpp);
+            *(((uint32_t *)pixbuf) + (i * width) + j) = formatPixel(pix, offsets, sizes);
+        }
     }
 
     gettimeofday(&end_tv, NULL);
