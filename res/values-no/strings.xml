@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">AndroSS</string>
+  <string name="ServiceStatusCheckBox_text">Aktivert?</string>
+  <string name="PersistenceCheckBox_text">Forbli aktivert?</string>
+
+  <string name="compression_text">Komprimeringsnivå:</string>
+  <string-array name="compression_types">
+    <item>PNG (best; treg)</item>
+    <item>JPG HQ (90%; rask)</item>
+    <item>JPG fast (40%; raskest)</item>
+  </string-array>
+
+  <string name="notifications_text">Vanlig varsel:</string>
+  <string name="toast_notify_text">Meldingsvindu</string>
+  <string name="audio_notify_text">Lyd</string>
+  <string name="vibe_notify_text">Vibrering</string>
+
+  <string name="triggers_text">Utløses på...</string>
+  <string name="camera_button_trigger_text">Kameraknapp?</string>
+  <string name="shake_trigger_text">Riste telefonen?</string>
+
+  <string name="root_test_message_title">Sjekker etter root-tilgang</string>
+  <string name="root_test_message">
+               AndroSS trenger root-tilgang for å fungere, så la oss se om du har har det. 
+               Dette er bare en enkel test, men hvis du godkjenner applikasjonen nå, vil du ikke
+               bli spurt igjen.</string>
+  <string name="root_test_message_neutral">La oss sjekke etter root-tilgang!</string>
+
+  <string name="root_test_failed_message_title">Root testen feilet</string>
+  <string name="root_test_failed_message">
+               Forsøket på å bruke su gikk ikke helt som det skulle. AndroSS trenger root-tilgang
+               for å fungere på enheten din. Du kan når som helst sjekke på nytt gjennom 
+               (Flere) Innstillinger i menyen. \n\nHvis du mener det burde fungere og har et par 
+               minutter til overs, kan du kontakte meg gjennom appens Market side.</string>
+  <string name="root_test_failed_message_neutral">Fillern! :(</string>
+
+  <string name="more_settings_menu">(Flere) Innstillinger</string>
+  <string name="screenshot_dir_text">Lagre skjermdum til:</string>
+  <string name="screenshot_dir_prompt">Lagre til:</string>
+  <string name="change_output_error">Kan ikke skrive til %s. Målmappen er ikke endret.</string>
+  <string name="su_path_text">Sti til su:</string>
+  <string name="su_path_prompt">su plassering:</string>
+  <string name="change_su_error">Kan ikke bruke su på %s.</string>
+  <string name="rotation_title">Dreie skjermdump</string>
+  <string name="rotation_summary">
+               Kryss av for å dreie bildet etter skjermretning før lagring. Ta vekk krysset for å 
+               en noe bedre ytelse.</string>
+
+  <string name="retry_root_check">Sjekk på ny for root-tilgang</string>
+  <string name="goto_debug_prompt">Feilsøkingsinformasjon</string>
+
+  <string name="empty_param_error">AndroSS kunne ikke startes - problem med su?</string>
+  <string name="debug_info_error">AndroSS kunne ikke startes eller har ikke blitt startet ennå. Prøv å aktivere under innstillinger.</string>
+  <string name="null_pixels_error">Noe gikk galt! Dette er en bug! :(</string>
+  <string name="null_pixels_custom_su_error">Noe gikk galt! su er nok ikke satt opp riktig.</string>
+
+  <string name="board">Board:</string>
+  <string name="framebuffer_info">Framebuffer parametere:</string>
+  <string name="width_label">bredde</string>
+  <string name="height_label">høyde</string>
+  <string name="depth_label">dybde</string>
+  <string name="stride_label">lengde</string>
+  <string name="red">rød</string>
+  <string name="green">grønn</string>
+  <string name="blue">blå</string>
+  <string name="alpha">alpha</string>
+  <string name="color_param">%1$s\t\t\t\t%2$s bits med forkyvning %3$s</string>
+</resources>
+
