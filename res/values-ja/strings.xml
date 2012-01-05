@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <string name="app_name">AndroSS</string>
+ <string name="ServiceStatusCheckBox_text">有効化</string>
+ <string name="PersistenceCheckBox_text">スクリーンショットを撮った後も有効化を維持します</string>
+
+ <string name="compression_text">圧縮レベル:</string>
+ <string-array name="compression_types">
+   <item>PNG (高画質; 低速)</item>
+   <item>JPG 高品質 (90%画質; 高速)</item>
+   <item>JPG 高速 (40%画質; より高速)</item>
+ </string-array>
+
+ <string name="notifications_text">フィードバック:</string>
+ <string name="toast_notify_text">トースト</string>
+ <string name="audio_notify_text">サウンド</string>
+ <string name="vibe_notify_text">振動</string>
+
+ <string name="triggers_text">以下により実行します...</string>
+ <string name="camera_button_trigger_text">カメラボタン</string>
+ <string name="shake_trigger_text">シェイク</string>
+
+ <string name="root_test_message_title">rootチェック中</string>
+ <string name="root_test_message">
+              AndroSSが動作するにはrootが必要です。正しく設定されているかテストします。単純なテストですが、ここでSuperuserのホワイトリストに登録することで以降の確認を抑制することが可能です。</string>
+ <string name="root_test_message_neutral">テストを実行します</string>
+
+ <string name="root_test_failed_message_title">ルートテスト失敗</string>
+ <string name="root_test_failed_message">
+              suを使用することができませんでした。AndroSSが動作するにはrootが必要です。このチェックはメニューの詳細設定からやり直すことができます。\n\nもしsu設定に間違いがないと思う場合は、マーケットページに記載された方法で私に報告してください。</string>
+ <string name="root_test_failed_message_neutral">了解 :(</string>
+
+ <string name="more_settings_menu">詳細設定</string>
+ <string name="screenshot_dir_text">スクリーンショット保存先:</string>
+ <string name="screenshot_dir_prompt">保存先:</string>
+ <string name="change_output_error">%sに書き込めません。保存先は変更されませんでした</string>
+ <string name="su_path_text">suパス:</string>
+ <string name="su_path_prompt">suパス:</string>
+ <string name="change_su_error">%sのsuは使用できません</string>
+ <string name="rotation_title">スクリーンショットを回転する</string>
+ <string name="rotation_summary">
+              チェックされている場合、本体の向きに合わせて回転します。無効にするとわずかにパフォーマンスが向上します。</string>
+
+ <string name="retry_root_check">ルートチェックをやり直す</string>
+ <string name="goto_debug_prompt">デバッグ情報</string>
+
+ <string name="empty_param_error">AndroSSデーモンを起動できませんでした。suの問題かもしれません</string>
+ <string name="debug_info_error">AndroSSデーモンが起動していません。メイン設定で有効化を行なってください</string>
+ <string name="null_pixels_error">ピクセルを取得できませんでした。おそらくバグでしょう :(</string>
+ <string name="null_pixels_custom_su_error">ピクセルを取得できませんでした。おそらくsuの設定が正しくありません。</string>
+
+ <string name="board">基盤:</string>
+ <string name="framebuffer_info">フレームバッファパラメータ:</string>
+ <string name="width_label">幅</string>
+ <string name="height_label">高さ</string>
+ <string name="depth_label">深さ</string>
+ <string name="stride_label">ストライド</string>
+ <string name="red">赤</string>
+ <string name="green">緑</string>
+ <string name="blue">青</string>
+ <string name="alpha">透過</string>
+ <string name="color_param">%1$s\t\t\t\t%2$s ビット オフセット%3$s</string>
+</resources>
