@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="app_name">AndroSS</string>
-  <string name="ServiceStatusCheckBox_text">Aktivert?</string>
-  <string name="PersistenceCheckBox_text">Forbli aktivert?</string>
+  <string name="ServiceStatusCheckBox_text">Aktivert</string>
+  <string name="PersistenceCheckBox_text">Forbli aktivert</string>
 
   <string name="compression_text">Komprimeringsnivå:</string>
   <string-array name="compression_types">
@@ -32,11 +32,11 @@
                Forsøket på å bruke su gikk ikke helt som det skulle. AndroSS trenger root-tilgang
                for å fungere på enheten din. Du kan når som helst sjekke på nytt gjennom 
                (Flere) Innstillinger i menyen. \n\nHvis du mener det burde fungere og har et par 
-               minutter til overs, kan du kontakte meg gjennom appens Market side.</string>
+               minutter til overs, kan du kontakte meg gjennom appens Market-side.</string>
   <string name="root_test_failed_message_neutral">Fillern! :(</string>
 
   <string name="more_settings_menu">(Flere) Innstillinger</string>
-  <string name="screenshot_dir_text">Lagre skjermdum til:</string>
+  <string name="screenshot_dir_text">Lagre skjermdump til:</string>
   <string name="screenshot_dir_prompt">Lagre til:</string>
   <string name="change_output_error">Kan ikke skrive til %s. Målmappen er ikke endret.</string>
   <string name="su_path_text">Sti til su:</string>
@@ -65,6 +65,6 @@
   <string name="green">grønn</string>
   <string name="blue">blå</string>
   <string name="alpha">alpha</string>
-  <string name="color_param">%1$s\t\t\t\t%2$s bits med forkyvning %3$s</string>
+  <string name="color_param">%1$s\t\t\t\t%2$s bits med forskyvning %3$s</string>
 </resources>
 
