@@ -53,6 +53,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     private static int screen_height;
     private static int screen_depth;
     private static int fb_stride;
+    // Color order: [r, g, b, a]
     private static int[] c_offsets;
     private static int[] c_sizes;
     private static String files_dir;
@@ -381,6 +382,15 @@ public class AndroSSService extends Service implements SensorEventListener {
             for (int color = 0; color < 4; ++color) {
                 AndroSSService.c_offsets[color] = Integer.parseInt(params[3 + (color * 2)]);
                 AndroSSService.c_sizes[color] = Integer.parseInt(params[4 + (color * 2)]);
+            }
+
+            // On exactly one device (Evo 3D / shooter), I have seen FB params
+            // that claim pixels are 32 bits deep, but that red and alpha both
+            // occupy the low byte. Until this comes up again, handle that case
+            // explicitly.
+            if (AndroSSService.screen_depth == 32 &&
+                AndroSSService.c_offsets[0] == AndroSSService.c_offsets[3]) {
+                AndroSSService.c_offsets[3] = 24;
             }
 
             AndroSSService.fb_stride = Integer.parseInt(params[11]);
