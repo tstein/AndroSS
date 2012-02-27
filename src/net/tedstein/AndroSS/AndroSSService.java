@@ -24,6 +24,7 @@ import android.hardware.SensorManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.MediaStore.Images;
 import android.util.Base64;
@@ -45,7 +46,8 @@ public class AndroSSService extends Service implements SensorEventListener {
     private static final String DEFAULT_SU_PATH = "/system/xbin/su";
     private static final float ACCEL_THRESH = 7.0F;
     private static final long IGNORE_SHAKE_INTERVAL = 1000 * 1000 * 1000;
-    private static SensorManager sm;
+    private static SensorManager sensorManager;
+    private static PowerManager powerManager;
     // Phone graphical parameters and fixed config.
     private static int screen_width;
     private static int screen_height;
@@ -280,8 +282,8 @@ public class AndroSSService extends Service implements SensorEventListener {
         boolean initialized = AndroSSService.initialized || init();
 
         if (initialized) {
-            sm.registerListener(this,
-                    sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            sensorManager.registerListener(this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                     SensorManager.SENSOR_DELAY_UI);
             setEnabled(true);
 
@@ -295,7 +297,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     public void onDestroy() {
         if (AndroSSService.initialized) {
             setEnabled(false);
-            sm.unregisterListener(this);
+            sensorManager.unregisterListener(this);
             Log.d(TAG, "Service: Destroyed.");
             Toast.makeText(this, "AndroSS service stopped.", Toast.LENGTH_SHORT).show();
         }
@@ -428,7 +430,8 @@ public class AndroSSService extends Service implements SensorEventListener {
             break;
         }
 
-        AndroSSService.sm = (SensorManager)getSystemService(SENSOR_SERVICE);
+        AndroSSService.sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        AndroSSService.powerManager = (PowerManager)getSystemService(POWER_SERVICE);
 
         AndroSSService.initialized = true;
         Log.d(TAG, "Service: Initialized.");
@@ -538,6 +541,14 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     public void takeScreenshot() {
         Calendar start_time = Calendar.getInstance();
+
+        // I wouldn't combine shake with persistent, but if you do, you probably
+        // don't want a ton of blank screenshots while it's in your pocket.
+        if (AndroSSService.powerManager.isScreenOn() == false) {
+            Log.d(TAG, "Service: Ignoring trigger because screen is off.");
+            return;
+        }
+
         Log.d(TAG, "Service: Getting framebuffer pixels.");
 
         int bpp = AndroSSService.screen_depth / 8;
