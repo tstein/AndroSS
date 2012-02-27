@@ -1,0 +1,32 @@
+# RGBA_8888 - Framebuffer layout is the same as the output layout.
+0x00000000 8  0 8  8 8 16 8 24 0xff000000
+0x0f0f0f0f 8  0 8  8 8 16 8 24 0xff0f0f0f
+0xf0f0f0f0 8  0 8  8 8 16 8 24 0xfff0f0f0
+0xffffffff 8  0 8  8 8 16 8 24 0xffffffff
+
+# RGB_888 - No alpha channel. My Nexus One running CyanogenMod 7.1.
+0x00000000 8  0 8  8 8 16 0  0 0xff000000
+0x000000ff 8  0 8  8 8 16 0  0 0xff0000ff
+0x0000ff00 8  0 8  8 8 16 0  0 0xff00ff00
+0x00ff0000 8  0 8  8 8 16 0  0 0xffff0000
+0x0000ffff 8  0 8  8 8 16 0  0 0xff00ffff
+0x00ffff00 8  0 8  8 8 16 0  0 0xffffff00
+0x00ffffff 8  0 8  8 8 16 0  0 0xffffffff
+
+# ABGR_8888 - Primarily, some high-end Samsung devices.
+# Caused a red tint through v0.4.3.
+0x000000ff 8 24 8 16 8  8 8  0 0xff000000
+0xff0000ff 8 24 8 16 8  8 8  0 0xff0000ff
+0x00ff00ff 8 24 8 16 8  8 8  0 0xff00ff00
+0x0000ffff 8 24 8 16 8  8 8  0 0xffff0000
+0xffff00ff 8 24 8 16 8  8 8  0 0xff00ffff
+0x00ffffff 8 24 8 16 8  8 8  0 0xffffff00
+0xffffffff 8 24 8 16 8  8 8  0 0xffffffff
+0x00000000 8 24 8 16 8  8 8  0 0xff000000
+0xff000000 8 24 8 16 8  8 8  0 0xff0000ff
+0x00ff0000 8 24 8 16 8  8 8  0 0xff00ff00
+0x0000ff00 8 24 8 16 8  8 8  0 0xffff0000
+0xffff0000 8 24 8 16 8  8 8  0 0xff00ffff
+0x00ffff00 8 24 8 16 8  8 8  0 0xffffff00
+0xffffff00 8 24 8 16 8  8 8  0 0xffffffff
+

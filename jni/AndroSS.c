@@ -48,7 +48,6 @@ static const char * FB_PATH = "/dev/fb0";
  *      If this has a value, this binary will interpret it as the number of
  *      bytes it should read from the framebuffer and write out.
  */
-
 int writeFBParams(int output_fd, int fb_fd)
 {
     // Run the appropriate ioctls to find out what we're dealing with.
@@ -85,6 +84,7 @@ int writeFBParams(int output_fd, int fb_fd)
     return(0);
 }
 
+
 int writeFBData(int output_fd, int fb_fd, int fb_bytes)
 {
     void * bytes = malloc(fb_bytes);
@@ -104,6 +104,7 @@ int writeFBData(int output_fd, int fb_fd, int fb_bytes)
 
     return 0;
 }
+
 
 int main()
 {
