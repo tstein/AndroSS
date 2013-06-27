@@ -16,13 +16,13 @@
   <string name="audio_notify_text">Lyd</string>
   <string name="vibe_notify_text">Vibrering</string>
 
-  <string name="triggers_text">Utløses på...</string>
+  <string name="triggers_text">Utløses på&#8230;</string>
   <string name="camera_button_trigger_text">Kameraknapp?</string>
   <string name="shake_trigger_text">Riste telefonen?</string>
 
   <string name="root_test_message_title">Sjekker etter root-tilgang</string>
   <string name="root_test_message">
-               AndroSS trenger root-tilgang for å fungere, så la oss se om du har har det. 
+               AndroSS trenger root-tilgang for å fungere, så la oss se om du har har det.
                Dette er bare en enkel test, men hvis du godkjenner applikasjonen nå, vil du ikke
                bli spurt igjen.</string>
   <string name="root_test_message_neutral">La oss sjekke etter root-tilgang!</string>
@@ -30,8 +30,8 @@
   <string name="root_test_failed_message_title">Root testen feilet</string>
   <string name="root_test_failed_message">
                Forsøket på å bruke su gikk ikke helt som det skulle. AndroSS trenger root-tilgang
-               for å fungere på enheten din. Du kan når som helst sjekke på nytt gjennom 
-               (Flere) Innstillinger i menyen. \n\nHvis du mener det burde fungere og har et par 
+               for å fungere på enheten din. Du kan når som helst sjekke på nytt gjennom
+               (Flere) Innstillinger i menyen. \n\nHvis du mener det burde fungere og har et par
                minutter til overs, kan du kontakte meg gjennom appens Market-side.</string>
   <string name="root_test_failed_message_neutral">Fillern! :(</string>
 
@@ -44,7 +44,7 @@
   <string name="change_su_error">Kan ikke bruke su på %s.</string>
   <string name="rotation_title">Dreie skjermdump</string>
   <string name="rotation_summary">
-               Kryss av for å dreie bildet etter skjermretning før lagring. Ta vekk krysset for å 
+               Kryss av for å dreie bildet etter skjermretning før lagring. Ta vekk krysset for å
                en noe bedre ytelse.</string>
 
   <string name="retry_root_check">Sjekk på ny for root-tilgang</string>

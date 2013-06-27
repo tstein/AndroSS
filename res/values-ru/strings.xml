@@ -16,7 +16,7 @@
   <string name="audio_notify_text">звук</string>
   <string name="vibe_notify_text">вибрация</string>
 
-  <string name="triggers_text">Скриншот при...</string>
+  <string name="triggers_text">Скриншот при&#8230;</string>
   <string name="camera_button_trigger_text">нажатии аппаратной кнопки камеры</string>
   <string name="shake_trigger_text">встряхивании</string>
 

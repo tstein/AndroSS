@@ -9,13 +9,13 @@
     android:layout_height="wrap_content"
     android:padding="7dip"
     android:paddingBottom="15dip"
-    android:textSize="20dip"/>
+    android:textSize="20sp"/>
   <TextView android:id="@+id/tv_framebuffer"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:padding="7dip"
     android:paddingBottom="15dip"
-    android:textSize="20dip"
+    android:textSize="20sp"
     android:text="@string/framebuffer_info"/>
   <LinearLayout android:id="@+id/ll_dimensions"
     android:layout_width="fill_parent"
@@ -31,13 +31,13 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"
+        android:textSize="16sp"
         android:text="@string/width_label"/>
       <TextView android:id="@+id/tv_width_value"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"/>
+        android:textSize="16sp"/>
     </LinearLayout>
     <LinearLayout android:id="@+id/ll_height"
       android:layout_width="fill_parent"
@@ -48,13 +48,13 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"
+        android:textSize="16sp"
         android:text="@string/height_label"/>
       <TextView android:id="@+id/tv_height_value"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"/>
+        android:textSize="16sp"/>
     </LinearLayout>
     <LinearLayout android:id="@+id/ll_depth"
       android:layout_width="fill_parent"
@@ -65,13 +65,13 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"
+        android:textSize="16sp"
         android:text="@string/depth_label"/>
       <TextView android:id="@+id/tv_depth_value"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"/>
+        android:textSize="16sp"/>
     </LinearLayout>
     <LinearLayout android:id="@+id/ll_stride"
       android:layout_width="fill_parent"
@@ -82,13 +82,13 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"
+        android:textSize="16sp"
         android:text="@string/stride_label"/>
       <TextView android:id="@+id/tv_stride_value"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16dip"/>
+        android:textSize="16sp"/>
     </LinearLayout>
   </LinearLayout>
   <TextView android:id="@+id/tv_red"
@@ -96,23 +96,23 @@
       android:layout_height="wrap_content"
       android:paddingLeft="7dip"
       android:paddingBottom="7dip"
-      android:textSize="16dip"/>
+      android:textSize="16sp"/>
   <TextView android:id="@+id/tv_green"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:paddingLeft="7dip"
       android:paddingBottom="7dip"
-      android:textSize="16dip"/>
+      android:textSize="16sp"/>
   <TextView android:id="@+id/tv_blue"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:paddingLeft="7dip"
       android:paddingBottom="7dip"
-      android:textSize="16dip"/>
+      android:textSize="16sp"/>
   <TextView android:id="@+id/tv_alpha"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:paddingLeft="7dip"
       android:paddingBottom="7dip"
-      android:textSize="16dip"/>
+      android:textSize="16sp"/>
 </LinearLayout>

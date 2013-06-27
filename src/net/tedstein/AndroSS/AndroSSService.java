@@ -1,20 +1,24 @@
 package net.tedstein.AndroSS;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.tedstein.AndroSS.util.Prefs;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.hardware.Sensor;
@@ -23,16 +27,17 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.MediaStore.Images;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Surface;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+@SuppressLint("DefaultLocale")
 public class AndroSSService extends Service implements SensorEventListener {
     static {
         System.loadLibrary("AndroSS_nbridge");
@@ -42,7 +47,7 @@ public class AndroSSService extends Service implements SensorEventListener {
     public static enum DeviceType { UNKNOWN, GENERIC, TEGRA_2 };
 
     private static final String TAG = "AndroSS";
-    private static final String DEFAULT_OUTPUT_DIR = "/sdcard/screenshots";
+    private static final String DEFAULT_OUTPUT_DIR = Environment.getExternalStorageDirectory() + "/screenshots";
     private static final String DEFAULT_SU_PATH = "/system/xbin/su";
     private static final float ACCEL_THRESH = 7.0F;
     private static final long IGNORE_SHAKE_INTERVAL = 1000 * 1000 * 1000;
@@ -351,6 +356,8 @@ public class AndroSSService extends Service implements SensorEventListener {
         updateCommand(this);
 
         switch (AndroSSService.getDeviceType(this)) {
+        case UNKNOWN:
+            return false;
         case GENERIC:
             // Configure su.
             AndroSSService.setSuPath(
@@ -453,14 +460,44 @@ public class AndroSSService extends Service implements SensorEventListener {
 
     // Actual screen-shooting functionality.
     private static void createExternalBinary(Context context) {
+        FileInputStream binaryAsset = null;
+        FileChannel binaryAssetChannel = null;
+        FileOutputStream binaryFile = null;
+        FileChannel binaryFileChannel = null;
+
         try {
-            FileOutputStream myfile = context.openFileOutput("AndroSS", MODE_PRIVATE);
-            myfile.write(Base64.decode(AndroSSNative.native64, Base64.DEFAULT));
-            myfile.close();
+            AssetFileDescriptor binaryAssetFD = context.getAssets().openFd("AndroSS");
+            binaryAsset = binaryAssetFD.createInputStream();
+            binaryAssetChannel = binaryAsset.getChannel();
+            binaryFile = context.openFileOutput("AndroSS", MODE_PRIVATE);
+            binaryFileChannel = binaryFile.getChannel();
+
+            binaryFileChannel.transferFrom(binaryAssetChannel, 0, binaryAssetFD.getLength());
             Runtime.getRuntime().exec("chmod 770 " + context.getFilesDir().getAbsolutePath()
                                           + "/AndroSS");
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } finally {
+            if (binaryAsset != null) {
+                try {
+                    binaryAsset.close();
+                } catch (IOException ioe) {}
+            }
+            if (binaryAssetChannel != null) {
+                try {
+                    binaryAssetChannel.close();
+                } catch (IOException ioe) {}
+            }
+            if (binaryFile != null) {
+                try {
+                    binaryFile.close();
+                } catch (IOException ioe) {}
+            }
+            if (binaryFileChannel != null) {
+                try {
+                    binaryFileChannel.close();
+                } catch (IOException ioe) {}
+            }
         }
     }
 
@@ -588,6 +625,8 @@ public class AndroSSService extends Service implements SensorEventListener {
         String command = "";
 
         switch (AndroSSService.getDeviceType(this)) {
+        case UNKNOWN:
+            return;
         case GENERIC:
             command =
                 AndroSSService.getSuPath(this) + " -c " + AndroSSService.files_dir + "/AndroSS";

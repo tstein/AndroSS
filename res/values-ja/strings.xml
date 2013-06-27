@@ -16,7 +16,7 @@
  <string name="audio_notify_text">サウンド</string>
  <string name="vibe_notify_text">振動</string>
 
- <string name="triggers_text">以下により実行します...</string>
+ <string name="triggers_text">以下により実行します&#8230;</string>
  <string name="camera_button_trigger_text">カメラボタン</string>
  <string name="shake_trigger_text">シェイク</string>
 

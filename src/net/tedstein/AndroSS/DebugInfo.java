@@ -17,6 +17,8 @@ public class DebugInfo extends Activity {
         TextView board;
 
         switch (AndroSSService.getDeviceType(this)) {
+        case UNKNOWN:
+            break;
         case GENERIC:
             setContentView(R.layout.debug_info);
 

@@ -3,7 +3,7 @@ CFLAGS = ${WFLAGS} -std=c99 -O3
 
 all: runtests
 	ndk-build
-	./genAndroSSNative.pl
+	cp ../obj/local/armeabi/AndroSS ../assets/
 
 tests: tests.c
 	gcc ${CFLAGS} -o tests tests.c
